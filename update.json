@@ -1,6 +1,6 @@
 {
   "version": "1.2.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/main/",
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/00a6519ccb67fb6506ff0813b7a0847ca57470cb/",
   "notes": "free Gemini AI, Update button only shows when needed"
 }
