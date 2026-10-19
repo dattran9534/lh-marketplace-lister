@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LH Marketplace Lister</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <div id="updateBar" class="update-bar" hidden>
+    <span id="updateText"></span>
+    <button id="updateBtn" class="primary">Update now</button>
+  </div>
+
+  <header class="top">
+    <div class="brand">
+      <span class="mark">LH</span>
+      <div>
+        <h1>Marketplace Lister</h1>
+        <p>Lynnwood Honda inventory to Facebook Marketplace <span id="versionTag" class="muted"></span></p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span id="aiTag" class="chip"></span>
+      <button id="settingsBtn" class="ghost">Settings</button>
+    </div>
+  </header>
+
+  <section class="import">
+    <textarea id="urls" rows="2" placeholder="Paste vehicle page links from lynnwoodhonda.com, one per line"></textarea>
+    <div class="import-actions">
+      <button id="importBtn" class="primary">Import</button>
+      <button id="importTabBtn" class="secondary" hidden>Import the page I was on</button>
+    </div>
+    <div id="importStatus" class="status" role="status"></div>
+  </section>
+
+  <main class="layout">
+    <aside class="list">
+      <div class="list-head">
+        <h2>Vehicles</h2>
+        <select id="filter" aria-label="Show">
+          <option value="active">Not posted</option>
+          <option value="posted">Posted</option>
+          <option value="all">All</option>
+        </select>
+      </div>
+      <div class="batch">
+        <label class="check"><input type="checkbox" id="selectAll"> Select all</label>
+        <button id="postSelectedBtn" class="primary" disabled>Post selected</button>
+      </div>
+      <ul id="vehicleList"></ul>
+      <p id="emptyList" class="muted">Import a vehicle to get started.</p>
+    </aside>
+
+    <section id="editor" class="editor" hidden>
+      <div class="ed-head">
+        <div>
+          <h2 id="edTitle"></h2>
+          <p class="muted" id="edMeta"></p>
+        </div>
+        <span id="edStatus" class="chip"></span>
+      </div>
+
+      <div class="block">
+        <div class="block-head">
+          <h3>Photos <span id="photoCount" class="muted"></span></h3>
+          <div class="mini-actions">
+            <button id="sortBtn" class="link">Sort with AI</button>
+            <button id="photosFirst20" class="link">First 20</button>
+            <button id="photosNone" class="link">None</button>
+          </div>
+        </div>
+        <p class="hint" id="photoHint">Drag to reorder. Click a photo to include or skip it. Facebook takes up to 20.</p>
+        <div id="photoGrid" class="photos"></div>
+      </div>
+
+      <div class="block">
+        <h3>Listing details</h3>
+        <div class="grid">
+          <label>Vehicle type<select data-field="vehicleType" data-opts="vehicleTypes"></select></label>
+          <label>Year<input data-field="year" type="number" min="1901" max="2030"></label>
+          <label>Make<select data-field="make" data-opts="makes"></select></label>
+          <label class="wide">Model<input data-field="model" type="text"></label>
+          <label>Mileage<input data-field="mileage" type="number" min="0"></label>
+          <label>Price ($)<input data-field="price" type="number" min="0"></label>
+          <label>Body style<select data-field="bodyStyle" data-opts="bodyStyles"></select></label>
+          <label>Exterior color<select data-field="exteriorColor" data-opts="colors"></select><small data-raw="exteriorColor"></small></label>
+          <label>Interior color<select data-field="interiorColor" data-opts="colors"></select><small data-raw="interiorColor"></small></label>
+          <label>Condition<select data-field="condition" data-opts="conditions"></select></label>
+          <label>Fuel type<select data-field="fuelType" data-opts="fuelTypes"></select></label>
+          <label>Transmission<select data-field="transmission" data-opts="transmissions"></select></label>
+          <label class="wide">VIN<input data-field="vin" type="text" maxlength="17"><small>Sent to Facebook only if you turn it on in Settings.</small></label>
+          <label class="check"><input data-field="cleanTitle" type="checkbox"> This vehicle has a clean title</label>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-head">
+          <h3>Vehicle history</h3>
+          <div class="mini-actions"><a id="carfaxLink" class="link" target="_blank" rel="noopener">Open CARFAX</a></div>
+        </div>
+        <div id="history" class="history"></div>
+      </div>
+
+      <div class="block">
+        <div class="block-head">
+          <h3>Description</h3>
+          <div class="mini-actions">
+            <button id="regenBtn" class="link">Rewrite with AI</button>
+            <button id="copyBtn" class="link">Copy</button>
+          </div>
+        </div>
+        <textarea data-field="description" rows="7"></textarea>
+        <p class="hint" id="descHint"></p>
+      </div>
+
+      <div class="actions">
+        <button id="postBtn" class="primary big">Post to Marketplace</button>
+        <button id="markBtn" class="secondary">Mark as posted</button>
+        <button id="refreshBtn" class="secondary">Re-import</button>
+        <button id="deleteBtn" class="danger">Delete</button>
+      </div>
+      <p class="hint">Post opens Facebook's vehicle form and fills it. You review and click Publish yourself.</p>
+    </section>
+  </main>
+
+  <dialog id="settingsDlg">
+    <form method="dialog" class="settings">
+      <h2>Settings</h2>
+
+      <h3>AI</h3>
+      <label>Anthropic API key
+        <div class="row"><input id="setApiKey" type="password" placeholder="sk-ant-..." autocomplete="off"><button type="button" id="testKeyBtn" class="secondary">Test</button></div>
+        <small id="keyStatus" class="muted">Stored only in this browser. Get one at console.anthropic.com.</small>
+      </label>
+      <label class="check"><input id="setUseAI" type="checkbox"> Write descriptions with AI</label>
+      <label class="check"><input id="setSortPhotos" type="checkbox"> Sort photos: exterior first, then interior</label>
+      <label>Opening line<input id="setOpening" type="text"></label>
+
+      <h3>Photos and Facebook</h3>
+      <label class="check"><input id="setRemoveBanner" type="checkbox"> Remove the Lynnwood Honda banner from photos</label>
+      <label>Default condition<select id="setCondition"></select></label>
+      <label class="check"><input id="setAutoFill" type="checkbox"> Start filling as soon as Facebook opens</label>
+      <label class="check"><input id="setFillVin" type="checkbox"> Fill the VIN on Facebook</label>
+      <p class="hint">Facebook reads the VIN and can add its own specs, like engine size, that you can't edit. They aren't always right, so check the preview when this is on.</p>
+      <label class="check"><input id="setFillLocation" type="checkbox"> Fill the Location field</label>
+      <label>Location<input id="setLocation" type="text"></label>
+
+      <h3>Updates</h3>
+      <div class="row">
+        <span id="setVersion" class="muted"></span>
+        <button type="button" id="checkUpdateBtn" class="secondary">Check for updates</button>
+        <button type="button" id="repickFolderBtn" class="link">Change folder</button>
+      </div>
+      <small id="updateStatus" class="muted"></small>
+
+      <div class="actions">
+        <button value="cancel" class="secondary">Cancel</button>
+        <button id="saveSettings" value="save" class="primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="shared.js"></script>
+  <script src="imageproc.js"></script>
+  <script src="ai.js"></script>
+  <script src="updater.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
