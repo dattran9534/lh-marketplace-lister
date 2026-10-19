@@ -2,6 +2,11 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.2
+
+- **Free AI.** Descriptions and photo sorting now run on Google Gemini's free tier.
+- **Update now** only shows when there's actually a new version (top bar and Settings).
+
 ## What's new in 1.1
 
 - **Post several at once.** Tick vehicles in the list and click **Post selected**. Each one opens in its own Facebook tab and fills itself.
@@ -13,19 +18,25 @@ An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fil
 - **Clean title box** ticks itself when CARFAX guarantees no title problems.
 - **One-click updates** (see below).
 
-## Install or upgrade to 1.1 (one last manual install)
+## Install
 
 1. Unzip `lh-marketplace-lister.zip` and copy its contents over your existing `lh-marketplace-lister` folder, replacing the old files. (Or unzip somewhere new.)
 2. Go to `edge://extensions`, find **LH Marketplace Lister**, and click its **Reload** arrow. If you used a new folder, click **Load unpacked** and pick it instead.
 
 Your saved vehicles and settings stay put. They live in Edge, not in the folder.
 
-## Turn on AI (needed for AI descriptions and photo sorting)
+## Turn on AI (free)
 
-1. Go to **console.anthropic.com**, sign up, add a few dollars of credit, and create an API key.
-2. In the app, open **Settings**, paste the key, and click **Test**.
+AI writes the descriptions and sorts the photos. It uses Google Gemini's free tier, so it costs nothing.
 
-The key is stored only in Edge on this computer. A typical car costs well under a cent: a fast, cheap model sorts the photos and a stronger one writes the description. Without a key, everything else still works and descriptions use a simpler built-in version.
+1. Go to **aistudio.google.com**, sign in with a Google account, and click **Get API key**, then **Create API key**. No credit card needed.
+2. In the app, open **Settings**, keep **AI provider** on **Google Gemini (free)**, paste the key, and click **Test**.
+
+The free tier has a daily limit (reported around 500 requests a day for the model the app falls back to). Each car uses 2, so a normal day is well within it. If it ever runs out, the app uses its built-in writer until the limit resets at midnight Pacific.
+
+Google says free tier requests may be used to improve its products and can be read by reviewers. The app only sends what you're about to post publicly anyway: the car's details, the positive CARFAX facts, and small copies of the photos.
+
+Prefer Claude? Switch **AI provider** to **Anthropic Claude (paid)** and use a key from console.anthropic.com.
 
 ## One-click updates
 

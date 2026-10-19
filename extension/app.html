@@ -130,9 +130,15 @@
       <h2>Settings</h2>
 
       <h3>AI</h3>
-      <label>Anthropic API key
-        <div class="row"><input id="setApiKey" type="password" placeholder="sk-ant-..." autocomplete="off"><button type="button" id="testKeyBtn" class="secondary">Test</button></div>
-        <small id="keyStatus" class="muted">Stored only in this browser. Get one at console.anthropic.com.</small>
+      <label>AI provider
+        <select id="setProvider">
+          <option value="gemini">Google Gemini (free)</option>
+          <option value="anthropic">Anthropic Claude (paid)</option>
+        </select>
+      </label>
+      <label><span id="keyLabel">API key</span>
+        <div class="row"><input id="setApiKey" type="password" autocomplete="off"><button type="button" id="testKeyBtn" class="secondary">Test</button></div>
+        <small id="keyStatus" class="muted"></small>
       </label>
       <label class="check"><input id="setUseAI" type="checkbox"> Write descriptions with AI</label>
       <label class="check"><input id="setSortPhotos" type="checkbox"> Sort photos: exterior first, then interior</label>
@@ -151,6 +157,7 @@
       <div class="row">
         <span id="setVersion" class="muted"></span>
         <button type="button" id="checkUpdateBtn" class="secondary">Check for updates</button>
+        <button type="button" id="settingsUpdateBtn" class="primary" hidden>Update now</button>
         <button type="button" id="repickFolderBtn" class="link">Change folder</button>
       </div>
       <small id="updateStatus" class="muted"></small>

@@ -1,6 +1,6 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "zip": "lh-marketplace-lister.zip",
   "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/main/",
-  "notes": "AI descriptions, CARFAX highlights, photo sorting, banner removal, batch posting"
+  "notes": "free Gemini AI, Update button only shows when needed"
 }

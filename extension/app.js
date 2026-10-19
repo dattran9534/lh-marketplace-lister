@@ -26,7 +26,15 @@ async function saveNow() {
 }
 const current = () => state.listings.find((l) => l.id === state.selectedId);
 const send = (msg) => chrome.runtime.sendMessage(msg);
-const aiReady = () => !!(state.settings.apiKey && state.settings.apiKey.trim());
+const aiCfg = () => {
+  const provider = state.settings.aiProvider === 'anthropic' ? 'anthropic' : 'gemini';
+  return { provider, key: ((provider === 'gemini' ? state.settings.geminiKey : state.settings.apiKey) || '').trim() };
+};
+const aiReady = () => !!aiCfg().key;
+const PROVIDER = {
+  gemini: { name: 'Gemini', keyName: 'Google AI Studio API key', placeholder: 'AIza...', help: 'Free. Get one at aistudio.google.com (Get API key). Stored only in this browser.' },
+  anthropic: { name: 'Claude', keyName: 'Anthropic API key', placeholder: 'sk-ant-...', help: 'Paid per use. Get one at console.anthropic.com. Stored only in this browser.' },
+};
 
 function setStatus(msg, kind = '') {
   const el = $('#importStatus');
@@ -62,7 +70,7 @@ async function processPhotos(images, say, { sort = true } = {}) {
   if (sort && state.settings.sortPhotos && aiReady() && results.some((r) => r.thumb)) {
     say('sorting photos with AI');
     try {
-      const { labels, hero } = await AI.classifyPhotos(state.settings.apiKey, results.map((r) => r.thumb));
+      const { labels, hero } = await AI.classifyPhotos(aiCfg(), results.map((r) => r.thumb));
       out = AI.sortImages(out, labels, hero);
       note = 'sorted';
     } catch (e) {
@@ -83,7 +91,7 @@ async function writeDescription(rec, say) {
   say('writing the description');
   try {
     const facts = S.factsFor(rec.raw, rec.fb, rec.carfax);
-    const text = await AI.writeDescription(state.settings.apiKey, facts, state.settings.opening);
+    const text = await AI.writeDescription(aiCfg(), facts, state.settings.opening);
     return { text, by: 'ai' };
   } catch (e) {
     return { text: fallback, by: 'template', error: e.message };
@@ -427,10 +435,19 @@ async function resort() {
 
 // ---------- settings ----------
 const SETTING_INPUTS = {
-  apiKey: '#setApiKey', opening: '#setOpening', location: '#setLocation', condition: '#setCondition',
+  opening: '#setOpening', location: '#setLocation', condition: '#setCondition',
   useAI: '#setUseAI', sortPhotos: '#setSortPhotos', removeBanner: '#setRemoveBanner', autoFill: '#setAutoFill',
   fillVin: '#setFillVin', fillLocation: '#setFillLocation',
 };
+
+const keyDraft = { gemini: '', anthropic: '' };
+function showProvider() {
+  const p = PROVIDER[$('#setProvider').value];
+  $('#keyLabel').textContent = p.keyName;
+  $('#setApiKey').placeholder = p.placeholder;
+  $('#setApiKey').value = keyDraft[$('#setProvider').value] || '';
+  $('#keyStatus').textContent = p.help;
+}
 
 function openSettings() {
   fillSelect($('#setCondition'), S.FB.conditions);
@@ -440,7 +457,11 @@ function openSettings() {
     else el.value = state.settings[k] || '';
   }
   $('#setVersion').textContent = `Version ${chrome.runtime.getManifest().version}`;
-  $('#keyStatus').textContent = 'Stored only in this browser. Get one at console.anthropic.com.';
+  keyDraft.gemini = state.settings.geminiKey || '';
+  keyDraft.anthropic = state.settings.apiKey || '';
+  $('#setProvider').value = aiCfg().provider;
+  $('#setProvider').dataset.prev = aiCfg().provider;
+  showProvider();
   $('#updateStatus').textContent = '';
   $('#settingsDlg').showModal();
 }
@@ -450,6 +471,10 @@ async function saveSettings() {
     const el = $(sel);
     state.settings[k] = el.type === 'checkbox' ? el.checked : el.value.trim();
   }
+  keyDraft[$('#setProvider').value] = $('#setApiKey').value.trim();
+  state.settings.aiProvider = $('#setProvider').value;
+  state.settings.geminiKey = keyDraft.gemini;
+  state.settings.apiKey = keyDraft.anthropic;
   if (!state.settings.condition) state.settings.condition = 'Excellent';
   await chrome.storage.local.set({ settings: state.settings });
   renderAiTag();
@@ -458,9 +483,10 @@ async function saveSettings() {
 
 function renderAiTag() {
   const t = $('#aiTag');
-  t.textContent = aiReady() ? 'AI on' : 'AI off';
+  const p = PROVIDER[aiCfg().provider];
+  t.textContent = aiReady() ? `AI on (${p.name})` : 'AI off';
   t.className = 'chip ' + (aiReady() ? 'posted' : '');
-  t.title = aiReady() ? 'Descriptions and photo sorting use Claude' : 'Add an Anthropic API key in Settings';
+  t.title = aiReady() ? `Descriptions and photo sorting use ${p.name}` : 'Add a free Gemini API key in Settings';
 }
 
 // ---------- updates ----------
@@ -470,9 +496,12 @@ async function checkForUpdate(manual) {
     const info = await LHUpdater.check(state.settings.updateSource);
     updateInfo = info.available ? info : null;
     $('#updateBar').hidden = !info.available;
+    $('#settingsUpdateBtn').hidden = !info.available;
+    if (info.available) $('#settingsUpdateBtn').textContent = `Update now to ${info.version}`;
     if (info.available) $('#updateText').textContent = `Version ${info.version} is ready${info.notes ? `: ${info.notes}` : '.'}`;
     if (manual) $('#updateStatus').textContent = info.available ? `Version ${info.version} is available.` : "You're on the latest version.";
   } catch (e) {
+    $('#settingsUpdateBtn').hidden = true;
     if (manual) $('#updateStatus').textContent = e.message;
   }
 }
@@ -546,12 +575,20 @@ async function init() {
   $('#settingsBtn').onclick = openSettings;
   $('#saveSettings').onclick = saveSettings;
   $('#testKeyBtn').onclick = async () => {
-    const key = $('#setApiKey').value.trim();
+    const cfg = { provider: $('#setProvider').value, key: $('#setApiKey').value.trim() };
+    if (!cfg.key) { $('#keyStatus').textContent = 'Paste a key first.'; return; }
     $('#keyStatus').textContent = 'Testing…';
-    try { await AI.testKey(key); $('#keyStatus').textContent = 'Key works.'; }
+    try { await AI.testKey(cfg); $('#keyStatus').textContent = 'Key works.'; }
     catch (e) { $('#keyStatus').textContent = e.message; }
   };
+  $('#setProvider').onchange = (e) => {
+    keyDraft[e.target.dataset.prev || 'gemini'] = $('#setApiKey').value.trim();
+    e.target.dataset.prev = e.target.value;
+    showProvider();
+  };
+  $('#setProvider').onfocus = (e) => { e.target.dataset.prev = e.target.value; };
   $('#checkUpdateBtn').onclick = () => checkForUpdate(true);
+  $('#settingsUpdateBtn').onclick = () => { $('#settingsDlg').close(); runUpdate(false); };
   $('#repickFolderBtn').onclick = async () => {
     try { await LHUpdater.pickFolder(); $('#updateStatus').textContent = 'Folder saved for updates.'; }
     catch (e) { if (e.name !== 'AbortError') $('#updateStatus').textContent = e.message; }
@@ -563,7 +600,7 @@ async function init() {
   const first = state.listings.find((l) => l.status !== 'posted') || state.listings[0];
   if (first) select(first.id);
   if (params.get('updated')) setStatus(`Updated to version ${chrome.runtime.getManifest().version}.`, 'ok');
-  else if (!aiReady()) setStatus('Tip: add your Anthropic API key in Settings so AI can write descriptions and sort photos.');
+  else if (!aiReady()) setStatus('Tip: add a free Gemini API key in Settings so AI can write descriptions and sort photos.');
   checkForUpdate(false);
 }
 

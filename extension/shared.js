@@ -17,6 +17,8 @@
     fillLocation: false,
     condition: 'Excellent',
     opening: '\u{1F4CD} Contact me, Dat, for more information or schedule for test drive!!!',
+    aiProvider: 'gemini',
+    geminiKey: '',
     apiKey: '',
     useAI: true,
     removeBanner: true,
