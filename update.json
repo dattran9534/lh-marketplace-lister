@@ -1,6 +1,6 @@
 {
-  "version": "1.9.0",
+  "version": "1.9.1",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/9bae96e909aede6540bcf487b8b3cb467f65e20f/",
-  "notes": "car-specific descriptions, better phone photo import, safe posting pace"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/1a95a1c6b8f6b6d53497e089131c1d8cc6719bf0/",
+  "notes": "phone requests can't get stuck; Cancel and Try again on the phone"
 }
