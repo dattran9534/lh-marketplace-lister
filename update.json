@@ -1,6 +1,6 @@
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/00a6519ccb67fb6506ff0813b7a0847ca57470cb/",
-  "notes": "free Gemini AI, Update button only shows when needed"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/9923ae13a199be6fd7b1a5e66cc5890427ff2021/",
+  "notes": "dashboard, Facebook sync, price changes, mark sold and delete, auto post"
 }
