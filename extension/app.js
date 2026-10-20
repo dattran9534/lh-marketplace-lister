@@ -77,6 +77,9 @@ async function processPhotos(images, say, { sort = true } = {}) {
       note = 'AI sort failed: ' + e.message;
     }
   }
+  // The dealer's waterfront hero shot is the one that carries the banner: it goes first.
+  const heroIdx = out.findIndex((im) => im.cropTop > 0 && (!im.kind || im.kind === 'exterior' || im.kind === 'unknown'));
+  if (heroIdx > 0) out.unshift(out.splice(heroIdx, 1)[0]);
   const max = state.settings.maxPhotos || 20;
   // First 20 that aren't "other" (engine bay, keys, papers); free slots go to the rest.
   let on = 0;
@@ -601,6 +604,9 @@ async function init() {
   if (first) select(first.id);
   if (params.get('updated')) setStatus(`Updated to version ${chrome.runtime.getManifest().version}.`, 'ok');
   else if (!aiReady()) setStatus('Tip: add a free Gemini API key in Settings so AI can write descriptions and sort photos.');
+  // dashboard.js loads after this file; wait for it instead of racing it.
+  if (!window.Dash && document.readyState === 'loading') await new Promise((r) => document.addEventListener('DOMContentLoaded', r, { once: true }));
+  if (window.Dash) await Dash.init();
   checkForUpdate(false);
 }
 

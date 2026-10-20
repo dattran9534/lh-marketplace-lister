@@ -2,6 +2,20 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.3
+
+- **Dashboard home page.** Every car shows as a box: photo, price, miles, status (Not posted, Active, Pending, Sold), listed date and clicks, plus totals at the top.
+- **Sync with Facebook.** Reads all your vehicle listings from your Facebook selling page and matches them to the cars in the app. Listings you made before the app show up too, marked "On Facebook only".
+- **Change price** right on a box. If the car is live on Facebook, the new price is saved on Facebook too.
+- **Mark sold, Mark pending, Mark available, Delete** for any Facebook listing, from its box. Delete always asks first.
+- **Auto post switch.** When on, a listing publishes by itself right after it fills in, but only if every field filled without a problem. When off (the default), you review and publish yourself.
+- **"Well serviced"** instead of a number of service records in descriptions.
+- **First photo** is now the waterfront front three quarter shot.
+
+### How the Facebook actions work
+
+Sync, price changes and the Mark / Delete buttons open your Facebook selling page in a tab for a few seconds, click Facebook's own buttons (the same ones you'd click), then close the tab and bring you back. Stay logged in to Facebook in Edge. If Facebook changes its pages, the box tells you what didn't work.
+
 ## What's new in 1.2
 
 - **Free AI.** Descriptions and photo sorting now run on Google Gemini's free tier.

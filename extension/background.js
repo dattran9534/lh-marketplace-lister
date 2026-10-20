@@ -137,7 +137,63 @@ async function myListing(msg, sender) {
   return { pending: hit && Date.now() - hit.at < 30 * 60 * 1000 ? hit.id : null };
 }
 
-const handlers = { extractFromTab, extractFromUrl, extractCarfax, listVehicleLinks, fetchImage, openComposer, myListing };
+// ---------- Facebook jobs: sync, price change, sold/pending/available/delete ----------
+// The app asks for a job; a Facebook tab opens, the content script does the
+// work with Facebook's own buttons and reports back here.
+const SELLING_URL = 'https://www.facebook.com/marketplace/you/selling';
+
+async function startFbJob({ job }, sender) {
+  const jobId = crypto.randomUUID();
+  const url = job.kind === 'price' && job.id ? `https://www.facebook.com/marketplace/edit/?listing_id=${job.id}` : SELLING_URL;
+  // Facebook only loads more listings while the tab is visible, so open it in front.
+  const tab = await chrome.tabs.create({ url, active: true });
+  const { fbJobs = {} } = await chrome.storage.local.get('fbJobs');
+  fbJobs[tab.id] = { ...job, jobId, at: Date.now(), returnTo: sender.tab && sender.tab.id };
+  await chrome.storage.local.set({ fbJobs });
+  return { jobId };
+}
+
+async function myJob(msg, sender) {
+  const { fbJobs = {} } = await chrome.storage.local.get('fbJobs');
+  const job = fbJobs[sender.tab && sender.tab.id];
+  return { job: job && Date.now() - job.at < 10 * 60 * 1000 ? job : null };
+}
+
+async function jobDone({ jobId, result }, sender) {
+  const tabId = sender.tab && sender.tab.id;
+  const { fbJobs = {}, jobResults = {} } = await chrome.storage.local.get(['fbJobs', 'jobResults']);
+  const job = fbJobs[tabId];
+  delete fbJobs[tabId];
+  for (const k of Object.keys(jobResults)) if (Date.now() - jobResults[k].at > 60 * 60 * 1000) delete jobResults[k];
+  jobResults[jobId] = { ...result, at: Date.now() };
+  const update = { fbJobs, jobResults };
+  if (result.listings) { update.fbListings = result.listings; update.fbSyncedAt = Date.now(); }
+  await chrome.storage.local.set(update);
+  setTimeout(() => {
+    chrome.tabs.remove(tabId).catch(() => {});
+    if (job && job.returnTo) chrome.tabs.update(job.returnTo, { active: true }).catch(() => {});
+  }, result.ok ? 800 : 4000);
+  return {};
+}
+
+async function cancelJob({ jobId }) {
+  const { fbJobs = {} } = await chrome.storage.local.get('fbJobs');
+  for (const [tabId, j] of Object.entries(fbJobs)) {
+    if (j.jobId === jobId) { delete fbJobs[tabId]; chrome.tabs.remove(Number(tabId)).catch(() => {}); }
+  }
+  await chrome.storage.local.set({ fbJobs });
+  return {};
+}
+
+// Auto post finished in a Facebook tab.
+async function markPosted({ id }) {
+  const { listings = [] } = await chrome.storage.local.get('listings');
+  const l = listings.find((x) => x.id === id);
+  if (l) { l.status = 'posted'; l.postedAt = Date.now(); await chrome.storage.local.set({ listings }); }
+  return {};
+}
+
+const handlers = { extractFromTab, extractFromUrl, extractCarfax, listVehicleLinks, fetchImage, openComposer, myListing, startFbJob, myJob, jobDone, cancelJob, markPosted };
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   const h = msg && handlers[msg.type];

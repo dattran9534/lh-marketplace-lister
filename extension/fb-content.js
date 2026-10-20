@@ -238,9 +238,17 @@
       await step('Description', () => setText('Description', fb.description));
       if (photoJob) await photoJob;
       const errs = logEl.querySelectorAll('li.err').length;
-      panel.querySelector('.lhml-foot').textContent = errs
-        ? `Done. ${errs} field${errs > 1 ? 's' : ''} need a quick look, then review and publish.`
-        : 'Done. Review the listing, then publish it yourself.';
+      const foot = panel.querySelector('.lhml-foot');
+      if (only === null && settings.autoPost && !errs) {
+        foot.textContent = 'Auto post is on: publishing…';
+        await step('Publish', (r) => autoPublish(listing, r));
+        const failed = logEl.querySelector('li.err[data-step="Publish"]');
+        foot.textContent = failed ? 'Could not publish automatically. Check the form and publish it yourself.' : 'Published. You can close this tab.';
+      } else {
+        foot.textContent = errs
+          ? `Done. ${errs} field${errs > 1 ? 's' : ''} need a quick look, then review and publish.${settings.autoPost ? ' (Auto post skipped because of this.)' : ''}`
+          : 'Done. Review the listing, then publish it yourself.';
+      }
     } finally {
       running = false;
       panel.querySelectorAll('button').forEach((b) => (b.disabled = false));
@@ -250,7 +258,7 @@
   let settingsCache = {};
   async function getData() {
     const d = await chrome.storage.local.get(['listings', 'settings']);
-    settingsCache = { maxPhotos: 20, fillLocation: false, autoFill: true, fillVin: false, removeBanner: true, ...(d.settings || {}) };
+    settingsCache = { maxPhotos: 20, fillLocation: false, autoFill: true, fillVin: false, removeBanner: true, autoPost: false, ...(d.settings || {}) };
     return { listings: d.listings || [], settings: settingsCache };
   }
 
@@ -310,6 +318,226 @@
     }
   }
 
+  // ---------- auto post ----------
+  const btnByText = (re) =>
+    [...document.querySelectorAll('[role="button"], button')].find((b) => visible(b) && !inPanel(b) &&
+      re.test(((b.getAttribute('aria-label') || '') + ' ' + (b.innerText || '')).trim()) &&
+      b.getAttribute('aria-disabled') !== 'true' && !b.disabled);
+
+  async function autoPublish(listing, report) {
+    const want = (listing.images || []).filter((i) => i.on).slice(0, settingsCache.maxPhotos || 20).length;
+    if (want) {
+      report('waiting for photos to upload');
+      // Facebook shows "Photos · N / 20" once uploads are in.
+      await waitFor(() => { const m = document.body.innerText.match(/Photos\s*·\s*(\d+)\s*\/\s*\d+/); return m && +m[1] >= Math.min(want, 20) - 1; }, 90000, 1000);
+      await sleep(4000);
+    }
+    report('clicking Next');
+    const next = await waitFor(() => btnByText(/^Next$/), 60000, 1000);
+    if (!next) throw new Error('Next button never became clickable');
+    next.click();
+    report('clicking Publish');
+    const pub = await waitFor(() => btnByText(/^Publish$/), 30000, 800);
+    if (!pub) throw new Error('Publish button not found');
+    await sleep(1200);
+    pub.click();
+    const left = await waitFor(() => !/^\/marketplace\/create/.test(location.pathname), 45000, 1000);
+    if (!left) throw new Error('Facebook did not confirm the post');
+    chrome.runtime.sendMessage({ type: 'markPosted', id: listing.id }).catch(() => {});
+    return 'published';
+  }
+
+  // ---------- selling page: sync and listing actions ----------
+  const SELLING = /^\/marketplace\/you\/selling/;
+  const EDIT = /^\/marketplace\/edit\//;
+
+  // Listing ids and photos from the data Facebook embeds in the page.
+  function embeddedListings() {
+    const out = {};
+    document.querySelectorAll('script[type="application/json"]').forEach((sc) => {
+      const t = sc.textContent;
+      if (!t.includes('marketplace_listing_title')) return;
+      try {
+        const walk = (o, d = 0) => {
+          if (!o || typeof o !== 'object' || d > 60) return;
+          if (Array.isArray(o)) return o.forEach((x) => walk(x, d + 1));
+          if (o.marketplace_listing_title && o.id) {
+            const photo = o.primary_listing_photo && (o.primary_listing_photo.image ? o.primary_listing_photo.image.uri : o.primary_listing_photo.listing_image && o.primary_listing_photo.listing_image.uri);
+            out[o.marketplace_listing_title] = out[o.marketplace_listing_title] || [];
+            out[o.marketplace_listing_title].push({ id: o.id, photo: photo || '', price: (o.formatted_price && o.formatted_price.text) || '' });
+          }
+          for (const k in o) walk(o[k], d + 1);
+        };
+        walk(JSON.parse(t));
+      } catch (e) {}
+    });
+    return out;
+  }
+
+  const MORE = '[aria-label^="More options for "]';
+  // Text of a card even when Facebook has stopped drawing it (off screen).
+  const textOf = (el) => {
+    const parts = [];
+    const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    let n;
+    while ((n = w.nextNode())) { const s = n.nodeValue.trim(); if (s) parts.push(s); }
+    return parts.join('\n');
+  };
+  // Group inventory listings say "In stock" / "Out of stock" instead.
+  const STATUS_RE = /(^|\n)(Active|Sold|Pending|In stock|Out of stock)(\n|$)/;
+  const STATUS_MAP = { 'In stock': 'Active', 'Out of stock': 'Sold' };
+
+  // The biggest box around this button that holds no other listing.
+  function cardFor(btn) {
+    let el = btn, best = null;
+    for (let k = 0; k < 20 && el.parentElement; k++) {
+      const p = el.parentElement;
+      const titles = new Set([...p.querySelectorAll(MORE)].map((b) => b.getAttribute('aria-label')));
+      if (titles.size > 1) break;
+      el = p;
+      const t = textOf(el);
+      if (/\$[\d,]+/.test(t) && STATUS_RE.test(t)) best = el;
+    }
+    return best;
+  }
+
+  async function loadAllCards() {
+    let last = -1, same = 0;
+    for (let i = 0; i < 60 && same < 4; i++) {
+      window.scrollTo(0, document.body.scrollHeight);
+      await sleep(900);
+      const n = document.querySelectorAll('[aria-label^="More options for "]').length;
+      if (n === last) same++; else { same = 0; last = n; }
+    }
+    window.scrollTo(0, 0);
+  }
+
+  function scrapeCards() {
+    const emb = embeddedListings();
+    const seen = new Set();
+    const out = [];
+    for (const btn of document.querySelectorAll(MORE)) {
+      const title = btn.getAttribute('aria-label').replace(/^More options for /, '').trim();
+      if (!/^\d{4}\s/.test(title)) continue; // skips Messenger names etc.
+      const card = cardFor(btn);
+      if (!card || seen.has(card)) continue;
+      seen.add(card);
+      const t = textOf(card);
+      const price = ((t.match(/\$[\d,]+/) || [])[0] || '').replace(/[$,]/g, '');
+      const raw = (t.match(STATUS_RE) || [])[2] || '';
+      const listedOn = (t.match(/Listed on ([\d/]+)/) || [])[1] || '';
+      const clicks = +((t.match(/([\d,]+) clicks? on listing/) || [])[1] || '0').replace(/,/g, '');
+      const img = card.querySelector('img');
+      const e = (emb[title] || []).find((c) => !c.taken && c.price.replace(/[$,]/g, '') === price) || (emb[title] || []).find((c) => !c.taken);
+      if (e) e.taken = true;
+      out.push({ title, price: price ? +price : '', status: STATUS_MAP[raw] || raw, group: !!STATUS_MAP[raw], listedOn, clicks, id: e ? e.id : '', photo: (e && e.photo) || (img ? img.src : '') });
+    }
+    return out;
+  }
+
+  // The "More options" button of the job's listing (matching price if the title repeats).
+  function findCardButton(job) {
+    const btns = [...document.querySelectorAll(`[aria-label="${CSS.escape('More options for ' + job.title)}"]`)];
+    const cards = [...new Set(btns.map((b) => cardFor(b)).filter(Boolean))];
+    const want = '$' + Number(job.price).toLocaleString('en-US');
+    const card = cards.find((c) => textOf(c).includes(want)) || cards[0];
+    return card ? { card, more: btns.find((b) => card.contains(b)) } : null;
+  }
+
+  // A button inside the listing's card, e.g. "Mark as sold" or "Mark out of stock".
+  function cardButton(card, re) {
+    return [...card.querySelectorAll('[role="button"], button')].find((b) => re.test(((b.getAttribute('aria-label') || '') + ' ' + (b.innerText || '')).trim()));
+  }
+
+  async function clickMenuItem(job, label) {
+    const hit = findCardButton(job);
+    const more = hit && hit.more;
+    if (!more) throw new Error('Listing not found on your selling page');
+    more.scrollIntoView({ block: 'center' });
+    more.click();
+    const item = await waitFor(() => [...document.querySelectorAll('[role="menuitem"], [role="menu"] [role="button"], [role="menu"] a')].find((e) => visible(e) && e.innerText.trim() === label), 5000);
+    if (!item) throw new Error(`"${label}" is not offered for this listing`);
+    item.click();
+  }
+
+  // Facebook sometimes asks a follow up question; answer it the safe way.
+  async function confirmDialog(confirmRe, timeout = 4000) {
+    const btn = await waitFor(() => {
+      const dlg = [...document.querySelectorAll('[role="dialog"]')].filter(visible).pop();
+      if (!dlg) return null;
+      return [...dlg.querySelectorAll('[role="button"], button')].find((b) => visible(b) && confirmRe.test((b.getAttribute('aria-label') || b.innerText || '').trim()) && b.getAttribute('aria-disabled') !== 'true');
+    }, timeout);
+    if (btn) { btn.click(); await sleep(1200); }
+    return !!btn;
+  }
+
+  async function setPriceOnEditPage(newPrice) {
+    await waitFor(() => findField('Price'), 20000, 300);
+    await sleep(1500);
+    await setText('Price', newPrice);
+    await sleep(800);
+    const upd = await waitFor(() => btnByText(/^Update$/), 10000, 400);
+    if (!upd) throw new Error('Update button not found');
+    upd.click();
+    const done = await waitFor(() => !EDIT.test(location.pathname) || !btnByText(/^Update$/), 30000, 800);
+    if (!done) throw new Error('Facebook did not confirm the new price');
+  }
+
+  async function runJob(job) {
+    const finish = (result) => chrome.runtime.sendMessage({ type: 'jobDone', jobId: job.jobId, result }).catch(() => {});
+    try {
+      if (job.kind === 'price' && EDIT.test(location.pathname)) {
+        await setPriceOnEditPage(job.newPrice);
+        return finish({ ok: true });
+      }
+      if (!SELLING.test(location.pathname)) return;
+      await waitFor(() => document.querySelector('[aria-label^="More options for "]') || /no listings/i.test(document.body.innerText), 20000, 500);
+      await sleep(1500);
+      if (job.kind === 'sync') {
+        await loadAllCards();
+        return finish({ ok: true, listings: scrapeCards() });
+      }
+      const act = job.action;
+      if (act === 'sold' || act === 'available') {
+        const hit = findCardButton(job);
+        if (!hit) throw new Error('Listing not found on your selling page');
+        const b = cardButton(hit.card, act === 'sold' ? /^Mark (as sold|out of stock)\b/i : /^Mark (as available|in stock)\b/i);
+        if (!b) throw new Error(act === 'sold' ? 'This listing has no "Mark as sold" button (already sold?)' : 'This listing is not marked sold');
+        b.scrollIntoView({ block: 'center' });
+        b.click();
+        await sleep(1500);
+        // "Who bought it?" style prompts: skip naming a buyer.
+        await confirmDialog(act === 'sold' ? /^(Mark as sold|Skip|Not now|Done|Confirm)$/i : /^(Mark as available|Confirm|Done)$/i);
+      } else if (act === 'pending') {
+        await clickMenuItem(job, 'Mark as pending');
+        await sleep(1500);
+        await confirmDialog(/^(Mark as pending|Confirm|Done)$/i);
+      } else if (act === 'delete') {
+        await clickMenuItem(job, 'Delete listing');
+        const ok = await confirmDialog(/^Delete$/i, 8000);
+        if (!ok) throw new Error('Facebook did not ask to confirm the delete');
+      } else if (job.kind === 'price') {
+        await clickMenuItem(job, 'Edit listing');
+        await waitFor(() => EDIT.test(location.pathname), 15000, 400);
+        await setPriceOnEditPage(job.newPrice);
+        return finish({ ok: true });
+      }
+      await sleep(2500);
+      return finish({ ok: true, listings: scrapeCards() });
+    } catch (e) {
+      return finish({ ok: false, error: e.message || String(e) });
+    }
+  }
+
+  let jobRunning = false;
+  async function checkJob() {
+    if (jobRunning) return;
+    const r = await chrome.runtime.sendMessage({ type: 'myJob' }).catch(() => null);
+    if (!r || !r.job) return;
+    jobRunning = true;
+    try { await runJob(r.job); } finally { jobRunning = false; }
+  }
+
   function unmount() {
     const p = document.getElementById(PANEL_ID);
     if (p) p.remove();
@@ -320,5 +548,6 @@
     if (location.pathname === lastPath) return;
     lastPath = location.pathname;
     COMPOSER.test(location.pathname) ? waitFor(() => findField('Vehicle type'), 15000, 300).then(mount) : unmount();
+    if (SELLING.test(location.pathname) || EDIT.test(location.pathname)) checkJob();
   }, 700);
 })();

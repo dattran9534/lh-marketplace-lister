@@ -20,6 +20,10 @@
         <p>Lynnwood Honda inventory to Facebook Marketplace <span id="versionTag" class="muted"></span></p>
       </div>
     </div>
+    <nav class="tabs" aria-label="Views">
+      <button id="tabDash" class="tab active">Dashboard</button>
+      <button id="tabWork" class="tab">Vehicle editor</button>
+    </nav>
     <div class="top-actions">
       <span id="aiTag" class="chip"></span>
       <button id="settingsBtn" class="ghost">Settings</button>
@@ -35,7 +39,36 @@
     <div id="importStatus" class="status" role="status"></div>
   </section>
 
-  <main class="layout">
+  <section id="dashView" class="dash">
+    <div class="dash-bar">
+      <div class="dash-sync">
+        <button id="syncBtn" class="primary">Sync with Facebook</button>
+        <span id="syncInfo" class="muted"></span>
+      </div>
+      <label class="switch" title="When on, listings publish by themselves right after they fill in, with no review">
+        <input type="checkbox" id="autoPostToggle"><span class="slider"></span><span class="switch-label">Auto post</span>
+      </label>
+    </div>
+    <div id="dashStatus" class="status" role="status"></div>
+    <div class="stats" id="stats"></div>
+    <div class="dash-filters">
+      <div class="chips" id="dashFilters">
+        <button data-f="all" class="fchip active">All</button>
+        <button data-f="notposted" class="fchip">Not posted</button>
+        <button data-f="Active" class="fchip">Active</button>
+        <button data-f="Pending" class="fchip">Pending</button>
+        <button data-f="Sold" class="fchip">Sold</button>
+      </div>
+      <div class="dash-right">
+        <input id="dashSearch" type="search" placeholder="Search year, make, model">
+        <button id="dashPostSelected" class="primary" disabled>Post selected</button>
+      </div>
+    </div>
+    <div id="boxes" class="boxes"></div>
+    <p id="dashEmpty" class="muted empty" hidden>Nothing here yet. Import a vehicle above or sync with Facebook.</p>
+  </section>
+
+  <main class="layout" id="workView" hidden>
     <aside class="list">
       <div class="list-head">
         <h2>Vehicles</h2>
@@ -174,5 +207,6 @@
   <script src="ai.js"></script>
   <script src="updater.js"></script>
   <script src="app.js"></script>
+  <script src="dashboard.js"></script>
 </body>
 </html>

@@ -100,7 +100,7 @@
         '- "exterior_detail": close up of an outside part (wheel, headlight, badge, grille, tailgate)\n' +
         '- "interior": inside the cabin (seats, dashboard, steering wheel, screen, door panel, headliner) or the cargo area / trunk\n' +
         '- "other": engine bay, keys, manuals, documents, window sticker, logos or anything else\n' +
-        'Also choose "hero": the single best exterior photo to show first, ideally a front three quarter view of the whole car.\n' +
+        'Also choose "hero": the photo to show first. It is the front three quarter view of the whole car showing the front and the driver side, usually parked on the waterfront with mountains and a ferry behind it. If there is no such photo, pick the best front three quarter exterior.\n' +
         'Reply with JSON only, using the image numbers shown: {"labels": {"1": "exterior", "2": "interior"}, "hero": 1}',
     });
     const text = await run(cfg, 'sorter', { parts, json: true, maxTokens: 4096 });
@@ -142,6 +142,7 @@
     'Rules:\n' +
     '- Use only the facts provided. Anything about owners, accidents, title, service history or where it was owned may ONLY come from "Verified history". If a topic is not listed there, do not mention it at all, not even to say it is unknown.\n' +
     '- Never mention damage, accidents, repairs, multiple owners, rental or fleet use, or anything negative.\n' +
+    '- Never give a number of service records or visits. Say it is well serviced instead.\n' +
     '- Only call the miles low if the mileage line says so.\n' +
     '- Only mention AWD, 4WD or all wheel drive if the drive line says so.\n' +
     '- No price, payments, financing, phone numbers, hashtags or markdown. No emoji except the one in the opening line.\n' +

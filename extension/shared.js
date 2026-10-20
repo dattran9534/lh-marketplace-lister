@@ -211,7 +211,7 @@
     if (f.owners === 1) positives.push('One owner');
     if (f.cleanTitle) positives.push('Clean title');
     if (f.noAccidents) positives.push('No accidents or damage reported');
-    if (f.serviceRecords >= 3) positives.push(`${f.serviceRecords} service records on the CARFAX`);
+    if (f.serviceRecords >= 3) positives.push('Well serviced');
     if (f.homegrown) positives.push('Sold and serviced right here at Lynnwood Honda');
     if (f.personal && !f.fleetOrRental) positives.push('Personal vehicle, not a rental or fleet car');
     if (/^washington$/i.test(f.lastState) && f.personal) positives.push('Locally owned in Washington');
@@ -263,7 +263,7 @@
     let lead = `Recently arrived! ${name}`;
     const withBits = [];
     if (lowMiles) withBits.push('low miles');
-    if (has(/service records|serviced right here/i)) withBits.push('a solid service history');
+    if (has(/well serviced|serviced right here/i)) withBits.push('a solid service history');
     if (withBits.length) lead += ` with ${joinList(withBits)}`;
     p1.push(lead + '.');
     const histBits = [];
