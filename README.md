@@ -2,6 +2,11 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.11
+
+- **Descriptions in Dat's own post shape.** Every post now follows his RDX post: "Recently arrived!" + the car + its biggest standout with real numbers (for example "only 62,472 miles (super low for a 2007)"), the CARFAX history line, "Well cared for ... making it a great ...", and "Clean, low-mileage Fits like this are getting harder to find!" With AI on, Gemini only lightly rewords that draft; if its version drops the miles, the warranty year, one owner or clean title, the app uses the draft instead.
+- **Miles, MPG and all photos on the first import.** The dealer site adds the vehicle details with JavaScript after the page loads, so a fast background import sometimes missed them (no miles, 1 photo). The app now waits for them, also reads them straight from the page's HTML, and tries once more if anything is still missing.
+
 ## What's new in 1.10 (faster)
 
 - **The PC hears phone requests right away.** The phone pings the PC through a live connection the moment you tap something, instead of waiting up to a minute for the PC's next check. The regular check now runs every 30 seconds as a backup.
