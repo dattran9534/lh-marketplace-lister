@@ -119,3 +119,27 @@ label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-w
 .pe-btns .pe-del { color: var(--accent); }
 .pe-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
 .actions .wide { flex: 1 1 100%; }
+
+/* live status */
+.statusbar { margin: 0 16px 10px; background: var(--card); border-radius: 14px; padding: 4px 12px; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+.srow { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; }
+.srow + .srow { border-top: 1px solid var(--line); }
+.sicon { width: 20px; flex: none; text-align: center; font-weight: 800; padding-top: 1px; }
+.srow.st-done .sicon { color: var(--ok); }
+.srow.st-failed .sicon { color: var(--accent); }
+.stext { display: flex; flex-direction: column; font-size: 14px; min-width: 0; }
+.stext b { font-size: 14px; }
+.stext span { color: var(--muted); font-size: 13px; }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--fb); border-radius: 50%; animation: spin .8s linear infinite; }
+/* switches */
+.switch-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 16px 10px; }
+.switch { display: flex; align-items: center; gap: 10px; margin: 0; padding: 10px 12px; background: var(--card); border-radius: 12px; color: var(--text); font-weight: 400; flex-direction: row; position: relative; }
+.switch input { position: absolute; opacity: 0; pointer-events: none; }
+.switch .slider { flex: none; width: 44px; height: 26px; border-radius: 999px; background: var(--line); position: relative; transition: background .15s; }
+.switch .slider::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.3); transition: transform .15s; }
+.switch input:checked + .slider { background: var(--ok); }
+.switch input:checked + .slider::after { transform: translateX(18px); }
+.switch b { display: block; font-size: 14px; }
+.switch small { display: block; font-size: 11px; color: var(--muted); line-height: 1.25; }
+.switch-note { margin: -4px 16px 10px; }
+.card .busy[hidden] { display: none; }

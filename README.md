@@ -2,6 +2,12 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.8.1 (phone app)
+
+- **No more blinking.** The car boxes update in place instead of redrawing every refresh.
+- **Live status.** A status box at the top shows what your PC is doing step by step (reading the dealer page, CARFAX, photos, writing the description, posting), then a ✓ or what went wrong.
+- **Auto post and Auto renew switches on the phone.** They stay in step with the PC switches through your account; whichever you changed last wins.
+
 ## What's new in 1.8
 
 - **Auto renew.** Turn on **Auto renew** on the dashboard and, once a day between 9am and 7pm, the extension opens Facebook's "Renew listings" screen in a background tab and renews every car listing that's ready (Facebook allows it about once a week per listing). Non-car listings, like parts, are left alone. **Renew now** does it right away, and the phone menu has **Ask PC to renew listings**. Edge needs to be open on the PC.

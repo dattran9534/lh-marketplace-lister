@@ -103,7 +103,8 @@
   async function runCommands(c) {
     const queued = await c.db.select('commands', 'status=eq.queued&order=created_at.asc&limit=5');
     for (const cmd of queued || []) {
-      await c.db.update('commands', { id: cmd.id }, { status: 'running' });
+      const STEP = { price: 'Changing the price on Facebook…', action: 'Updating the listing on Facebook…', photos: 'Uploading photos to Facebook…', post: 'Opening Facebook…', sync: 'Syncing with Facebook…', renew: 'Renewing listings on Facebook…', import: 'Starting the import…' };
+      await c.db.update('commands', { id: cmd.id }, { status: 'running', result: STEP[cmd.kind] || 'Working on it…' });
       try {
         const fn = COMMANDS[cmd.kind];
         if (!fn) throw new Error(`Unknown request "${cmd.kind}"`);
@@ -129,6 +130,22 @@
       }
     }
     return changed;
+  }
+
+  async function syncSwitches(c) {
+    const { settings = {} } = await chrome.storage.local.get('settings');
+    const remote = await c.account.get().catch(() => null);
+    const localAt = settings.switchesAt || 0;
+    if (remote && remote.at > localAt) {
+      settings.autoPost = !!remote.autoPost;
+      settings.autoRenew = !!remote.autoRenew;
+      settings.switchesAt = remote.at;
+      await chrome.storage.local.set({ settings });
+    } else if (!remote || localAt > remote.at || remote.autoPost !== !!settings.autoPost || remote.autoRenew !== !!settings.autoRenew) {
+      const at = localAt || Date.now();
+      await c.account.set({ autoPost: !!settings.autoPost, autoRenew: !!settings.autoRenew, at });
+      if (!localAt) { settings.switchesAt = at; await chrome.storage.local.set({ settings }); }
+    }
   }
 
   let running = false;
@@ -179,7 +196,10 @@
 
       await chrome.storage.local.set({ cloudFp: sent, cloudPull: newest, cloudLastSync: Date.now(), cloudError: '' });
 
-      // 4. Phone requests.
+      // 4. Auto post / Auto renew switches, shared with the phone (newest change wins).
+      await syncSwitches(c);
+
+      // 5. Phone requests.
       await runCommands(c);
     } catch (e) {
       await chrome.storage.local.set({ cloudError: e.message || String(e) });

@@ -372,7 +372,9 @@
 
   async function setAutoRenew(on) {
     state.settings.autoRenew = on;
+    state.settings.switchesAt = Date.now();
     await chrome.storage.local.set({ settings: state.settings });
+    chrome.runtime.sendMessage({ type: 'cloudSyncNow' }).catch(() => {});
     say(on ? 'Auto renew is on. Once a day between 9am and 7pm, car listings that are ready get renewed in a background tab (Edge needs to be open).' : 'Auto renew is off.', 'ok');
     render();
   }
@@ -383,7 +385,9 @@
       return;
     }
     state.settings.autoPost = on;
+    state.settings.switchesAt = Date.now();
     await chrome.storage.local.set({ settings: state.settings });
+    chrome.runtime.sendMessage({ type: 'cloudSyncNow' }).catch(() => {});
     say(on ? 'Auto post is on. Listings publish right after they fill in.' : 'Auto post is off. You review and publish each listing yourself.', 'ok');
     render();
   }
@@ -411,8 +415,9 @@
       // Keep in step with Facebook tabs (auto post) and other app tabs.
       chrome.storage.onChanged.addListener(async (ch) => {
         if (ch.listings && !saveTimer) { state.listings = ch.listings.newValue || []; renderList(); }
+        if (ch.settings && ch.settings.newValue) { state.settings.autoPost = !!ch.settings.newValue.autoPost; state.settings.autoRenew = !!ch.settings.newValue.autoRenew; state.settings.switchesAt = ch.settings.newValue.switchesAt; }
         if (ch.fbListings) await loadFb();
-        if (ch.listings || ch.fbListings) render();
+        if (ch.listings || ch.fbListings || ch.settings) render();
       });
       setInterval(() => { if (!$('#dashView').hidden) $('#syncInfo').textContent = D.syncedAt ? `Last synced ${timeAgo(D.syncedAt)}` : 'Not synced yet'; }, 60000);
       showView(params.get('view') === 'work' ? 'work' : 'dash');

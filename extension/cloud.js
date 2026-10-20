@@ -125,7 +125,27 @@
       },
     };
 
-    return { url, signIn, signUp, signOut, user, token, db, photos, configured: !!(url && key) };
+    // Small shared settings (Auto post, Auto renew) kept on your account, so the
+    // phone and the PC see the same switches without any database changes.
+    const account = {
+      async get() {
+        const r = await fetch(`${url}/auth/v1/user`, { headers: { apikey: key, Authorization: `Bearer ${await token()}` } });
+        if (!r.ok) throw new Error(`Couldn't load your settings (${r.status})`);
+        const j = await r.json();
+        return (j.user_metadata && j.user_metadata.lhSettings) || null;
+      },
+      async set(lhSettings) {
+        const r = await fetch(`${url}/auth/v1/user`, {
+          method: 'PUT',
+          headers: { ...baseHeaders(), Authorization: `Bearer ${await token()}` },
+          body: JSON.stringify({ data: { lhSettings } }),
+        });
+        if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.msg || j.message || `Couldn't save your settings (${r.status})`); }
+        return lhSettings;
+      },
+    };
+
+    return { url, signIn, signUp, signOut, user, token, db, photos, account, configured: !!(url && key) };
   }
 
   // Cheap fingerprint to tell whether a record changed since it was last sent.

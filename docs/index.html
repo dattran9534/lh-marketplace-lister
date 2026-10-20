@@ -47,7 +47,13 @@
         <button id="menuBtn" class="icon" aria-label="More">⋯</button>
       </div>
     </header>
+    <div id="statusBar" class="statusbar" hidden></div>
     <div class="stats" id="stats"></div>
+    <div class="switch-row">
+      <label class="switch"><input type="checkbox" id="swAutoPost"><span class="slider"></span><span><b>Auto post</b><small>Publish right after a car is imported</small></span></label>
+      <label class="switch"><input type="checkbox" id="swAutoRenew"><span class="slider"></span><span><b>Auto renew</b><small>Renew ready listings once a day</small></span></label>
+    </div>
+    <p id="switchNote" class="muted small switch-note" hidden></p>
     <div class="filters">
       <div class="chips" id="chips">
         <button data-f="all" class="chip active">All</button>

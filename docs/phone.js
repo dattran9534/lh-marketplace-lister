@@ -75,7 +75,8 @@
     $('#whoAmI').textContent = `Signed in as ${user.email}`;
     show('main');
     load();
-    setInterval(() => { if (!document.hidden) load(true); }, 15000);
+    loadSwitches();
+    setInterval(() => { if (!document.hidden) { load(true); loadSwitches(); } }, 15000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) load(true); });
   }
 
@@ -115,6 +116,7 @@
       S.pcSeen = fb && fb[0] && fb[0].pc_seen_at ? new Date(fb[0].pc_seen_at) : null;
       S.commands = cmds || [];
       render();
+      if (S.commands.some(isPending)) fastPoll();
       if (S.open && !draft) renderSheet();
     } catch (e) {
       if (/sign in again/i.test(e.message)) { show('login'); msg('#loginMsg', e.message); }
@@ -138,9 +140,10 @@
   }
   let fastTimer;
   function fastPoll() {
+    if (fastTimer) return; // already polling
     clearInterval(fastTimer);
     let n = 0;
-    fastTimer = setInterval(() => { if (++n > 30 || !S.commands.some(isPending)) clearInterval(fastTimer); load(true); }, 4000);
+    fastTimer = setInterval(() => { if (++n > 60 || !S.commands.some(isPending)) { clearInterval(fastTimer); fastTimer = null; } load(true); }, 3000);
   }
   const isPending = (c) => c.status === 'queued' || c.status === 'running';
 
@@ -229,17 +232,25 @@
   }
 
   // ---------- render ----------
+  // Cards are kept and updated in place (no rebuild), so nothing blinks on refresh.
+  const cards = new Map(); // key -> { el, sig, imgKey }
+  const imgKeyOf = (im) => (im ? im.cloud || im.local || im.url || '' : '');
+  let lastStats = '';
+
   function render() {
-    // PC status
     const pc = $('#pcStatus');
     pc.classList.toggle('on', !!pcOnline());
     $('.txt', pc).textContent = pcOnline() ? 'PC online' : S.pcSeen ? `PC offline since ${S.pcSeen.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}` : 'PC not connected yet';
 
     const all = items();
     const count = (fn) => all.filter(fn).length;
-    $('#stats').innerHTML = '';
-    [['Active', count((it) => it.f && it.f.status === 'Active')], ['Not posted', count((it) => it.v && !it.f && it.v.status !== 'posted')], ['Pending', count((it) => it.f && it.f.status === 'Pending')], ['Sold', count((it) => it.f && it.f.status === 'Sold')]]
-      .forEach(([l, n]) => { const d = document.createElement('div'); d.className = 'stat'; d.innerHTML = '<b></b><span></span>'; $('b', d).textContent = n; $('span', d).textContent = l; $('#stats').appendChild(d); });
+    const stats = [['Active', count((it) => it.f && it.f.status === 'Active')], ['Not posted', count((it) => it.v && !it.f && it.v.status !== 'posted')], ['Pending', count((it) => it.f && it.f.status === 'Pending')], ['Sold', count((it) => it.f && it.f.status === 'Sold')]];
+    const statsSig = JSON.stringify(stats);
+    if (statsSig !== lastStats) {
+      lastStats = statsSig;
+      $('#stats').innerHTML = '';
+      stats.forEach(([l, n]) => { const d = document.createElement('div'); d.className = 'stat'; d.innerHTML = '<b></b><span></span>'; $('b', d).textContent = n; $('span', d).textContent = l; $('#stats').appendChild(d); });
+    }
 
     const q = S.search.toLowerCase();
     const list = all.filter((it) => {
@@ -249,30 +260,105 @@
       return !q || titleOf(it).toLowerCase().includes(q);
     });
     const grid = $('#grid');
-    grid.innerHTML = '';
     $('#empty').hidden = list.length > 0;
-    for (const it of list) {
-      const c = document.createElement('button');
-      c.className = 'card';
+    const keep = new Set();
+    list.forEach((it, i) => {
+      keep.add(it.key);
       const st = statusOf(it);
-      const busy = commandsFor(it).some(isPending);
-      c.innerHTML = `<div class="img"><img alt="" loading="lazy"><span class="badge st-${norm(st)}"></span>${busy ? '<span class="busy">Waiting for PC</span>' : ''}</div><div class="info"><b class="t"></b><span class="p"></span><span class="m muted"></span></div>`;
-      const first = it.v ? (it.v.images || []).find((i) => i.on) || (it.v.images || [])[0] : null;
-      if (first) setImg($('img', c), first); else if (it.f && it.f.photo) $('img', c).src = it.f.photo; else $('img', c).remove();
-      $('.badge', c).textContent = st;
-      $('.t', c).textContent = titleOf(it);
-      $('.p', c).textContent = money(priceOf(it));
-      $('.m', c).textContent = [it.v && it.v.fb.mileage ? Number(it.v.fb.mileage).toLocaleString() + ' mi' : '', it.f && it.f.status !== 'Sold' ? `${it.f.clicks || 0} clicks` : ''].filter(Boolean).join(' · ');
-      c.onclick = () => openSheet(it);
-      grid.appendChild(c);
-    }
+      const pending = commandsFor(it).find(isPending);
+      const first = it.v ? (it.v.images || []).find((x) => x.on) || (it.v.images || [])[0] : null;
+      const imgKey = first ? imgKeyOf(first) : (it.f && it.f.photo) || '';
+      const meta = [it.v && it.v.fb.mileage ? Number(it.v.fb.mileage).toLocaleString() + ' mi' : '', it.f && it.f.status !== 'Sold' ? `${it.f.clicks || 0} clicks` : ''].filter(Boolean).join(' · ');
+      const busyTxt = pending ? (pending.status === 'running' ? 'PC is working…' : 'Waiting for PC') : '';
+      const sig = JSON.stringify([st, busyTxt, titleOf(it), priceOf(it), meta]);
+      let c = cards.get(it.key);
+      if (!c) {
+        const el = document.createElement('button');
+        el.className = 'card';
+        el.innerHTML = '<div class="img"><img alt="" loading="lazy"><span class="badge"></span><span class="busy" hidden></span></div><div class="info"><b class="t"></b><span class="p"></span><span class="m muted"></span></div>';
+        el.onclick = () => openSheet(el.__it);
+        c = { el, sig: '', imgKey: null };
+        cards.set(it.key, c);
+      }
+      c.el.__it = it;
+      if (c.imgKey !== imgKey) {
+        c.imgKey = imgKey;
+        const img = $('img', c.el);
+        img.hidden = !imgKey;
+        if (first) setImg(img, first); else if (it.f && it.f.photo) img.src = it.f.photo;
+      }
+      if (c.sig !== sig) {
+        c.sig = sig;
+        const b = $('.badge', c.el);
+        b.textContent = st;
+        b.className = `badge st-${norm(st)}`;
+        const busy = $('.busy', c.el);
+        busy.hidden = !busyTxt;
+        busy.textContent = busyTxt;
+        $('.t', c.el).textContent = titleOf(it);
+        $('.p', c.el).textContent = money(priceOf(it));
+        $('.m', c.el).textContent = meta;
+      }
+      if (grid.children[i] !== c.el) grid.insertBefore(c.el, grid.children[i] || null);
+    });
+    for (const [k, c] of cards) if (!keep.has(k)) { c.el.remove(); cards.delete(k); }
+    renderStatus();
     renderActivity();
+  }
+
+  // Live status: what your PC is doing right now, step by step.
+  let lastStatus = '';
+  function renderStatus() {
+    const now = Date.now();
+    const live = S.commands.filter((c) => isPending(c) || (c.done_at && now - new Date(c.done_at).getTime() < 90000)).slice(0, 4);
+    const sig = JSON.stringify(live.map((c) => [c.id, c.status, c.result]));
+    if (sig === lastStatus) return;
+    lastStatus = sig;
+    const bar = $('#statusBar');
+    bar.hidden = !live.length;
+    bar.innerHTML = '';
+    live.forEach((c) => {
+      const row = document.createElement('div');
+      row.className = 'srow st-' + c.status;
+      const icon = c.status === 'done' ? '✓' : c.status === 'failed' ? '!' : '';
+      row.innerHTML = `<span class="sicon">${icon || '<i class="spinner"></i>'}</span><span class="stext"><b></b><span></span></span>`;
+      $('b', row).textContent = describeCmd(c);
+      $('.stext span', row).textContent = c.status === 'queued' ? (pcOnline() ? 'Waiting for your PC…' : 'Waiting for your PC to come online (Edge open)') : c.result || STATUS_TXT[c.status];
+      bar.appendChild(row);
+    });
+  }
+
+  // Auto post / Auto renew, shared with the PC through your account.
+  let switches = null;
+  async function loadSwitches() {
+    try {
+      switches = (await cloud.account.get()) || { autoPost: false, autoRenew: false, at: 0 };
+      $('#swAutoPost').checked = !!switches.autoPost;
+      $('#swAutoRenew').checked = !!switches.autoRenew;
+    } catch (e) {}
+  }
+  async function setSwitch(name, on, el) {
+    if (name === 'autoPost' && on && !confirm('With Auto post on, a car you import publishes on Facebook right after it fills in, without you checking it first. It only publishes when every must-have field filled.\n\nTurn Auto post on?')) { el.checked = false; return; }
+    el.disabled = true;
+    try {
+      const next = { autoPost: $('#swAutoPost').checked, autoRenew: $('#swAutoRenew').checked, at: Date.now() };
+      switches = await cloud.account.set(next);
+      const note = $('#switchNote');
+      note.hidden = false;
+      note.textContent = `${name === 'autoPost' ? 'Auto post' : 'Auto renew'} turned ${on ? 'on' : 'off'}. ${pcOnline() ? 'Your PC picks it up within a minute.' : 'Your PC picks it up next time Edge is open.'}`;
+      setTimeout(() => (note.hidden = true), 6000);
+    } catch (e) {
+      el.checked = !on;
+      toast(e.message);
+    } finally {
+      el.disabled = false;
+    }
   }
 
   const STATUS_TXT = { queued: 'Waiting for PC', running: 'PC is working on it', done: 'Done', failed: 'Did not work' };
   function describeCmd(c) {
     const p = c.payload || {};
-    const what = c.kind === 'price' ? `Price ${money(p.newPrice)}` : c.kind === 'action' ? ({ sold: 'Mark sold', pending: 'Mark pending', available: 'Mark available', delete: 'Delete' }[p.action] || p.action) : c.kind === 'photos' ? 'Update photos on Facebook' : c.kind === 'post' ? 'Post to Facebook' : c.kind === 'import' ? 'Import' : c.kind === 'sync' ? 'Sync with Facebook' : c.kind === 'renew' ? 'Renew listings' : c.kind;
+    const what = c.kind === 'price' ? `Price ${money(p.newPrice)}` : c.kind === 'action' ? ({ sold: 'Mark sold', pending: 'Mark pending', available: 'Mark available', delete: 'Delete' }[p.action] || p.action) : c.kind === 'photos' ? 'Update photos on Facebook' : c.kind === 'post' ? 'Post to Facebook' : c.kind === 'import' ? 'Import car' : c.kind === 'sync' ? 'Sync with Facebook' : c.kind === 'renew' ? 'Renew listings' : c.kind;
     return `${what}${p.title ? ' · ' + p.title : ''}`;
   }
   function cmdRow(c) {
@@ -283,10 +369,14 @@
     $('span', d).textContent = STATUS_TXT[c.status] + (c.result ? ` · ${c.result}` : '');
     return d;
   }
+  let lastActivity = '';
   function renderActivity() {
     const box = $('#activity');
-    box.innerHTML = '';
     const recent = S.commands.slice(0, 6);
+    const sig = JSON.stringify(recent.map((c) => [c.id, c.status, c.result]));
+    if (sig === lastActivity) return;
+    lastActivity = sig;
+    box.innerHTML = '';
     if (!recent.length) return;
     const h = document.createElement('h3');
     h.textContent = 'Recent requests';
@@ -320,10 +410,14 @@
     $('#dPrice').textContent = money(priceOf(fresh));
 
     const ph = $('#dPhotos');
-    ph.innerHTML = '';
     const imgs = v ? (v.images || []).filter((i) => i.on) : [];
+    const phSig = JSON.stringify([fresh.key, imgs.map(imgKeyOf), f && f.photo]);
+    if (ph.dataset.sig !== phSig) {
+    ph.dataset.sig = phSig;
+    ph.innerHTML = '';
     if (imgs.length) imgs.forEach((im) => { const img = document.createElement('img'); img.alt = ''; img.loading = 'lazy'; setImg(img, im); ph.appendChild(img); });
     else if (f && f.photo) { const img = document.createElement('img'); img.src = f.photo; ph.appendChild(img); }
+    }
     $('.photo-actions').hidden = !v;
     $('#dDescBox').hidden = !v;
     if (v && document.activeElement !== $('#dDesc')) $('#dDesc').value = v.fb.description || '';
@@ -456,6 +550,8 @@
   $('#dPriceCancel').onclick = () => ($('#dPriceEdit').hidden = true);
   $('#dPriceSave').onclick = savePrice;
   $('#dDescSave').onclick = saveDesc;
+  $('#swAutoPost').onchange = (e) => setSwitch('autoPost', e.target.checked, e.target);
+  $('#swAutoRenew').onchange = (e) => setSwitch('autoRenew', e.target.checked, e.target);
   $('#editPhotosBtn').onclick = openPhotoEditor;
   $('#peCancel').onclick = closePhotoEditor;
   $('#peSave').onclick = savePhotoEditor;

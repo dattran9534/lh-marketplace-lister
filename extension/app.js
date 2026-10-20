@@ -145,8 +145,8 @@ function upsert(rec) {
   else state.listings.unshift(rec);
 }
 
-async function importOne(getRaw, label) {
-  const say = (step) => setStatus(`${label}: ${step}…`);
+async function importOne(getRaw, label, onStep) {
+  const say = (step) => { setStatus(`${label}: ${step}…`); if (onStep) onStep(step); };
   say('reading the dealer page');
   const raw = await getRaw();
   const existing = raw.vin && state.listings.find((l) => l.raw && l.raw.vin === raw.vin);
@@ -575,13 +575,16 @@ async function runPhoneImport() {
   const c = cloudClient();
   let status = 'done', result = '';
   try {
+    const progress = (step) => { if (c) c.db.update('commands', { id: cmdId }, { result: step.charAt(0).toUpperCase() + step.slice(1) + '…' }).catch(() => {}); };
     const rec = await importOne(async () => {
       const r = await send({ type: 'extractFromUrl', url });
       if (!r || !r.ok) throw new Error(r ? r.error : 'no response');
       return r.data;
-    }, 'Importing for your phone');
-    result = `Imported ${rec.fb.year} ${rec.fb.make} ${rec.fb.model}`;
+    }, 'Importing for your phone', progress);
+    const name = `${rec.fb.year} ${rec.fb.make} ${rec.fb.model}`;
+    if (state.settings.autoPost) progress(`imported ${name}, posting to Facebook`);
     await autoPostAfterImport([rec]);
+    result = state.settings.autoPost ? `Imported ${name}. Auto post is publishing it on your PC.` : `Imported ${name}. Auto post is off, so it's waiting for you to post.`;
   } catch (e) {
     status = 'failed'; result = e.message;
   }
