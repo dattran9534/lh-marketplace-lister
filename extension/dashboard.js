@@ -77,6 +77,11 @@
     });
     $('#syncInfo').textContent = D.syncedAt ? `Last synced ${timeAgo(D.syncedAt)}` : 'Not synced yet';
     $('#autoPostToggle').checked = !!state.settings.autoPost;
+    $('#autoRenewToggle').checked = !!state.settings.autoRenew;
+    chrome.storage.local.get('lastRenew').then(({ lastRenew }) => {
+      const t = lastRenew ? `Last renew ${timeAgo(lastRenew.at)}${lastRenew.renewed && lastRenew.renewed.length ? ` (${lastRenew.renewed.length})` : ''}` : '';
+      $('#renewNowBtn').title = t || 'Renew every car listing that\'s ready now';
+    });
 
     const list = visibleItems();
     const box = $('#boxes');
@@ -346,6 +351,32 @@
     }
   }
 
+  // ---------- renew ----------
+  async function renewNow() {
+    const b = $('#renewNowBtn');
+    b.disabled = true;
+    say('Renewing your car listings that are ready (in a background tab)…');
+    try {
+      const r = await chrome.runtime.sendMessage({ type: 'renewNow' });
+      if (!r || !r.ok) throw new Error((r && r.error) || 'Could not renew');
+      const n = r.result.renewed.length;
+      say(n ? `Renewed ${n}: ${r.result.renewed.join(', ')}.` : 'Nothing was ready to renew yet. Facebook allows it about once a week per listing.', 'ok');
+      if (n) sync({ quiet: true });
+    } catch (e) {
+      say(`Renew didn't work: ${e.message}`, 'err');
+    } finally {
+      b.disabled = false;
+      render();
+    }
+  }
+
+  async function setAutoRenew(on) {
+    state.settings.autoRenew = on;
+    await chrome.storage.local.set({ settings: state.settings });
+    say(on ? 'Auto renew is on. Once a day between 9am and 7pm, car listings that are ready get renewed in a background tab (Edge needs to be open).' : 'Auto renew is off.', 'ok');
+    render();
+  }
+
   async function setAutoPost(on) {
     if (on && !confirm('With Auto post on, each listing publishes by itself right after it fills in, without you checking it first. It only publishes when every field filled without a problem.\n\nTurn Auto post on?')) {
       $('#autoPostToggle').checked = false;
@@ -367,6 +398,8 @@
       $('#fullSyncBtn').onclick = () => sync({ full: true });
       $('#learnBtn').onclick = () => learnFromBest();
       $('#autoPostToggle').onchange = (e) => setAutoPost(e.target.checked);
+      $('#autoRenewToggle').onchange = (e) => setAutoRenew(e.target.checked);
+      $('#renewNowBtn').onclick = renewNow;
       $('#dashSearch').oninput = (e) => { D.search = e.target.value; render(); };
       $$('#dashFilters .fchip').forEach((b) => {
         b.onclick = () => {

@@ -47,9 +47,15 @@
         <button id="learnBtn" class="link" title="Reads your best posts on Facebook (nothing is changed) so the AI learns what gets clicks">Learn from my best posts</button>
         <span id="syncInfo" class="muted"></span>
       </div>
-      <label class="switch" title="When on, listings publish by themselves right after they fill in, with no review">
-        <input type="checkbox" id="autoPostToggle"><span class="slider"></span><span class="switch-label">Auto post</span>
-      </label>
+      <div class="switches">
+        <label class="switch" title="Once a day (9am to 7pm), renews every car listing Facebook says is ready, in a background tab">
+          <input type="checkbox" id="autoRenewToggle"><span class="slider"></span><span class="switch-label">Auto renew</span>
+        </label>
+        <button id="renewNowBtn" class="link" title="Renew every car listing that's ready now">Renew now</button>
+        <label class="switch" title="When on, listings publish by themselves right after they fill in, with no review">
+          <input type="checkbox" id="autoPostToggle"><span class="slider"></span><span class="switch-label">Auto post</span>
+        </label>
+      </div>
     </div>
     <div id="dashStatus" class="status" role="status"></div>
     <div class="stats" id="stats"></div>

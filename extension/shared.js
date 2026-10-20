@@ -18,6 +18,7 @@
     condition: 'Excellent',
     opening: '\u{1F4CD} Contact me, Dat, for more information or schedule for test drive!!!',
     aiProvider: 'gemini',
+    autoRenew: false,
     cloudUrl: 'https://auiprvcueqekuhuxepjp.supabase.co',
     cloudKey: 'sb_publishable_bgpi0s-mZeWhG6Mo3seTiA_Ug7eyR6o',
     geminiKey: '',
@@ -206,7 +207,7 @@
     if (start) {
       const d = new Date(start + 'T12:00:00');
       d.setMonth(d.getMonth() + months);
-      info.until = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      info.until = String(d.getFullYear());
       info.expired = d < new Date();
     }
     if (raw.mileage && raw.mileage >= miles) info.expired = true;
@@ -215,8 +216,9 @@
 
   function certifiedSentence(c) {
     if (!c) return '';
-    if (c.expired) return `${c.name} pre-owned.`;
-    return `${c.name} pre-owned, backed by Honda's ${c.terms} powertrain warranty${c.until ? `, good until ${c.until} or ${Number(c.miles).toLocaleString('en-US')} miles` : ' from the original sale date'}.`;
+    // Short and simple, like Dat writes it: "Honda True Certified with warranty through 2031."
+    if (c.expired) return `${c.name}.`;
+    return c.until ? `${c.name} with warranty through ${c.until}.` : `${c.name} with Honda warranty.`;
   }
   // Reads the text of a CARFAX report. Returns every fact found, split into
   // positives (safe to advertise) and negatives (never sent to the writer).

@@ -84,6 +84,10 @@
       const { settings = {} } = await chrome.storage.local.get('settings');
       return settings.autoPost ? 'Posting on your PC (Auto post will publish it)' : 'Opened on your PC, waiting for you to publish';
     },
+    async renew() {
+      const r = await renewNow({});
+      return r.renewed.length ? `Renewed ${r.renewed.length}: ${r.renewed.join(', ')}` : 'Nothing was ready to renew yet (Facebook allows it about once a week per listing)';
+    },
     async sync() {
       const r = await runFbJob({ kind: 'sync' });
       if (!r.ok) throw new Error(r.error);

@@ -159,7 +159,8 @@ const SELLING_URL = 'https://www.facebook.com/marketplace/you/selling';
 
 async function startFbJob({ job }, sender) {
   const jobId = crypto.randomUUID();
-  const url = (job.kind === 'price' || job.kind === 'photos' || job.kind === 'readDesc') && job.id ? `https://www.facebook.com/marketplace/edit/?listing_id=${job.id}` : SELLING_URL;
+  const url = job.kind === 'renew' ? 'https://www.facebook.com/marketplace/selling/renew_listings/'
+    : (job.kind === 'price' || job.kind === 'photos' || job.kind === 'readDesc') && job.id ? `https://www.facebook.com/marketplace/edit/?listing_id=${job.id}` : SELLING_URL;
   // Background tab so you can keep working. The one exception is a full sync
   // (first time, or when asked): Facebook only loads older listings in a visible tab.
   const front = job.kind === 'sync' && job.full;
@@ -247,7 +248,40 @@ async function markPosted({ id }) {
   return {};
 }
 
-const handlers = { extractFromTab, extractFromUrl, extractCarfax, listVehicleLinks, fetchImage, openComposer, myListing, startFbJob, myJob, jobDone, cancelJob, markPosted, passiveSync, showMe, cloudSyncNow: async () => { await LHCloudSync.syncOnce(); return {}; } };
+// ---------- auto renew ----------
+// Once a day between 9am and 7pm, renew every car listing Facebook says is ready.
+async function waitJob(jobId, timeoutMs) {
+  const t0 = Date.now();
+  while (Date.now() - t0 < timeoutMs) {
+    await sleep(1500);
+    const { jobResults = {} } = await chrome.storage.local.get('jobResults');
+    if (jobResults[jobId]) return jobResults[jobId];
+  }
+  await cancelJob({ jobId });
+  throw new Error('Facebook took too long');
+}
+
+async function renewNow({ titles } = {}) {
+  const { jobId } = await startFbJob({ job: { kind: 'renew', carsOnly: true, titles: titles || null } }, {});
+  const r = await waitJob(jobId, 180000);
+  const lastRenew = { at: Date.now(), ok: !!r.ok, renewed: r.renewed || [], error: r.ok ? '' : r.error || '' };
+  await chrome.storage.local.set({ lastRenew });
+  if (!r.ok) throw new Error(r.error);
+  return lastRenew;
+}
+
+async function autoRenewTick() {
+  const { settings = {}, lastRenew } = await chrome.storage.local.get(['settings', 'lastRenew']);
+  if (!settings.autoRenew) return;
+  const h = new Date().getHours();
+  if (h < 9 || h >= 19) return;
+  if (lastRenew && Date.now() - lastRenew.at < 20 * 3600 * 1000) return;
+  try { await renewNow(); } catch (e) {}
+}
+chrome.alarms.create('autoRenew', { periodInMinutes: 60, delayInMinutes: 2 });
+chrome.alarms.onAlarm.addListener((a) => { if (a.name === 'autoRenew') autoRenewTick(); });
+
+const handlers = { extractFromTab, extractFromUrl, extractCarfax, listVehicleLinks, fetchImage, openComposer, myListing, startFbJob, myJob, jobDone, cancelJob, markPosted, passiveSync, showMe, renewNow: async (m) => ({ result: await renewNow(m) }), cloudSyncNow: async () => { await LHCloudSync.syncOnce(); return {}; } };
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   const h = msg && handlers[msg.type];

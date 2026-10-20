@@ -272,7 +272,7 @@
   const STATUS_TXT = { queued: 'Waiting for PC', running: 'PC is working on it', done: 'Done', failed: 'Did not work' };
   function describeCmd(c) {
     const p = c.payload || {};
-    const what = c.kind === 'price' ? `Price ${money(p.newPrice)}` : c.kind === 'action' ? ({ sold: 'Mark sold', pending: 'Mark pending', available: 'Mark available', delete: 'Delete' }[p.action] || p.action) : c.kind === 'photos' ? 'Update photos on Facebook' : c.kind === 'post' ? 'Post to Facebook' : c.kind === 'import' ? 'Import' : c.kind === 'sync' ? 'Sync with Facebook' : c.kind;
+    const what = c.kind === 'price' ? `Price ${money(p.newPrice)}` : c.kind === 'action' ? ({ sold: 'Mark sold', pending: 'Mark pending', available: 'Mark available', delete: 'Delete' }[p.action] || p.action) : c.kind === 'photos' ? 'Update photos on Facebook' : c.kind === 'post' ? 'Post to Facebook' : c.kind === 'import' ? 'Import' : c.kind === 'sync' ? 'Sync with Facebook' : c.kind === 'renew' ? 'Renew listings' : c.kind;
     return `${what}${p.title ? ' · ' + p.title : ''}`;
   }
   function cmdRow(c) {
@@ -445,6 +445,7 @@
   $('#installHelpBtn').onclick = () => ($('#installHelp').hidden = false);
   $('#signOutBtn').onclick = async () => { await cloud.signOut(); location.reload(); };
   $('#syncFbBtn').onclick = () => { $('#menu').hidden = true; request('sync', {}, 'Sync requested'); };
+  $('#renewBtn').onclick = () => { $('#menu').hidden = true; request('renew', {}, 'Renew requested'); };
   $('#addCarBtn').onclick = () => {
     const url = prompt('Paste a vehicle link from lynnwoodhonda.com');
     if (url && /^https?:\/\//i.test(url.trim())) request('import', { url: url.trim() }, 'Import requested');

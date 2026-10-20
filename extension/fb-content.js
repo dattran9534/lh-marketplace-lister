@@ -354,6 +354,44 @@
     return 'published';
   }
 
+  // ---------- renew ----------
+  // facebook.com/marketplace/selling/renew_listings/ shows a "Renew listings" box
+  // with one row per listing that's ready, each with its own Renew button.
+  const RENEW = /^\/marketplace\/selling\/renew_listings/;
+  function renewRows() {
+    const dlg = [...document.querySelectorAll('[role="dialog"]')].filter(visible).find((d) => /Renew listings/i.test(d.innerText)) || document.querySelector('[role="main"]');
+    if (!dlg) return [];
+    const btns = [...dlg.querySelectorAll('[role="button"], button')].filter((b) => visible(b) && labelMatches(b, /^Renew$/i));
+    return btns.map((b) => {
+      // The row: biggest box around this button that holds no other Renew button.
+      let row = b;
+      while (row.parentElement && row.parentElement !== dlg && [...row.parentElement.querySelectorAll('[role="button"], button')].filter((x) => labelMatches(x, /^Renew$/i)).length === 1) row = row.parentElement;
+      const lines = textOf(row).split('\n').map((x) => x.trim()).filter((x) => x && !/^Renew$/i.test(x));
+      const title = lines.find((x) => !/^\$[\d,]+/.test(x)) || '';
+      const price = +(((lines.find((x) => /^\$[\d,]+/.test(x)) || '').match(/[\d,]+/) || ['0'])[0].replace(/,/g, ''));
+      return { btn: b, title, price };
+    });
+  }
+
+  async function renewListings(job) {
+    await waitFor(() => renewRows().length || /no listings|nothing to renew|all caught up/i.test(document.body.innerText) || (openDialogs().length && /Renew listings/i.test(document.body.innerText)), 20000, 500);
+    await sleep(1500);
+    const carsOnly = job.carsOnly !== false;
+    const only = job.titles && job.titles.length ? new Set(job.titles) : null;
+    const renewed = [], skipped = [];
+    for (const r of renewRows()) {
+      const isCar = /^\d{4}\s/.test(r.title);
+      if ((carsOnly && !isCar) || (only && !only.has(r.title))) { skipped.push(r.title); continue; }
+      r.btn.scrollIntoView({ block: 'center' });
+      r.btn.click();
+      // The button changes (Renewed) or goes away once Facebook accepts it.
+      const ok = await waitFor(() => !document.contains(r.btn) || !labelMatches(r.btn, /^Renew$/i) || !enabled(r.btn), 8000, 300);
+      renewed.push(ok ? r.title : `${r.title} (not confirmed)`);
+      await sleep(1200 + Math.random() * 1200);
+    }
+    return { renewed, skipped };
+  }
+
   // ---------- selling page: sync and listing actions ----------
   const SELLING = /^\/marketplace\/you\/selling/;
   const EDIT = /^\/marketplace\/edit\//;
@@ -563,6 +601,10 @@
         await setPriceOnEditPage(job.newPrice);
         return finish({ ok: true });
       }
+      if (job.kind === 'renew' && RENEW.test(location.pathname)) {
+        const res = await renewListings(job);
+        return finish({ ok: true, ...res });
+      }
       if (job.kind === 'readDesc' && EDIT.test(location.pathname)) {
         return finish({ ok: true, description: await readDescOnEditPage() });
       }
@@ -664,7 +706,7 @@
     if (location.pathname === lastPath) return;
     lastPath = location.pathname;
     COMPOSER.test(location.pathname) ? waitFor(() => findField('Vehicle type'), 15000, 300).then(mount) : unmount();
-    if (SELLING.test(location.pathname) || EDIT.test(location.pathname)) {
+    if (SELLING.test(location.pathname) || EDIT.test(location.pathname) || RENEW.test(location.pathname)) {
       checkJob().then((hadJob) => { if (!hadJob && SELLING.test(location.pathname)) passiveSync(); });
     }
   }, 700);
