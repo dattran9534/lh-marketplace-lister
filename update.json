@@ -1,6 +1,6 @@
 {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/3c546a69dac2ab3adcddcb48e9f84a9f94b0a7e9/",
-  "notes": "dashboard, Facebook sync, price changes, mark sold and delete, auto post"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/3a7b51e82ce1e6013295aec6dc8b476654691252/",
+  "notes": "fixes Mark sold, Delete and Auto post; background tabs; certified warranty; your own photos"
 }
