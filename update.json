@@ -1,6 +1,6 @@
 {
-  "version": "1.8.1",
+  "version": "1.9.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/311492942efd3aba11b567cb2d4b3db466e1c8ba/",
-  "notes": "live status and switches for the phone app"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/9bae96e909aede6540bcf487b8b3cb467f65e20f/",
+  "notes": "car-specific descriptions, better phone photo import, safe posting pace"
 }
