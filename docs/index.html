@@ -108,6 +108,24 @@
     </div>
   </div>
 
+  <!-- Add a car: link + your own photos -->
+  <div id="addSheet" class="sheet" hidden>
+    <div class="sheet-card small-card" role="dialog" aria-modal="true" aria-labelledby="addTitle">
+      <div class="grab"></div>
+      <button id="closeAdd" class="icon close" aria-label="Close">✕</button>
+      <h2 id="addTitle">Add a car</h2>
+      <label class="field">Link from lynnwoodhonda.com
+        <input id="addUrl" type="url" inputmode="url" autocomplete="off" placeholder="https://www.lynnwoodhonda.com/viewdetails/...">
+      </label>
+      <label class="btn secondary big"><input id="addCarPhotos" type="file" accept="image/*" multiple hidden>Add your photos (optional)</label>
+      <div id="addThumbs" class="add-thumbs"></div>
+      <label class="check-row" id="onlyMineRow" hidden><input id="onlyMine" type="checkbox" checked> Use only my photos (skip the dealer's)</label>
+      <p class="muted small">If the dealer site only has the generic catalog picture, it's replaced by your photos automatically.</p>
+      <p id="addMsg" class="muted small"></p>
+      <button id="addGo" class="primary big">Import</button>
+    </div>
+  </div>
+
   <!-- Menu -->
   <div id="menu" class="sheet" hidden>
     <div class="sheet-card small-card">

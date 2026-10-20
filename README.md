@@ -2,6 +2,13 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.13
+
+- **Your phone photos before importing.** On the phone, **＋** now opens **Add a car**: paste the link, add your own photos, and choose **Use only my photos**. They upload first and the PC imports the car with them.
+- **Generic catalog photos detected automatically.** When the dealer site only has the stock catalog picture (new arrivals), the app knows: your photos replace it as soon as you add them (on the phone or PC), colors are read from your photos instead, and the car is never auto posted with only the catalog picture.
+- **Correct drive type.** AWD was being picked up from other cars in the "Similar vehicles" strip. The drive type now comes from the car's own data on the page (for example FWD on a Civic Touring).
+- **Features instead of filler.** No more "Pacific Northwest" or "making it a great…". The post now names the trim's 3 or 4 best features from the dealer's feature list, for example "This Touring comes with heated leather seats, a moonroof, navigation, and remote start." When the dealer page lists few features, the AI fills in the trim's standard ones.
+
 ## What's new in 1.12.1
 
 - **Check for updates sees new versions right away.** It now asks GitHub directly instead of a link that can lag up to 5 minutes behind.

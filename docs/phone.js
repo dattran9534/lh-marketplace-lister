@@ -199,6 +199,8 @@
     }
   }
 
+  const STOCK = /stock_images|stockphoto|\/stock\//i;
+
   // Phone photos can be huge; shrink to 2048px JPEG before uploading.
   function shrink(file, maxSide = 2048) {
     return new Promise((resolve) => {
@@ -230,7 +232,16 @@
         v.images = v.images || [];
         v.images.push({ cloud: path, url: '', fallback: '', on: true, cropTop: 0, kind: '' });
       }
-      await saveVehicle(v);
+      const stock = (v.images || []).filter((i) => STOCK.test(i.url || ''));
+      if (stock.length) {
+        // Your photos replace the dealer's generic catalog picture; the PC re-reads colors from them.
+        v.images = v.images.filter((i) => !STOCK.test(i.url || ''));
+        v.stockOnly = false;
+        await saveVehicle(v);
+        if (v.raw && v.raw.sourceUrl) request('import', { url: v.raw.sourceUrl, title: `${v.fb.year} ${v.fb.make} ${v.fb.model}`, vehicleId: v.id }, 'Updating the car with your photos');
+      } else {
+        await saveVehicle(v);
+      }
       msg('#photoMsg', `Added ${files.length} photo${files.length === 1 ? '' : 's'}. They'll show on the PC within a minute.`);
       renderSheet();
       render();
@@ -451,6 +462,8 @@
     else if (f && f.photo) { const wrap = document.createElement('div'); wrap.className = 'ph-frame'; const img = document.createElement('img'); img.src = f.photo; wrap.appendChild(img); ph.appendChild(wrap); }
     }
     $('.photo-actions').hidden = !v;
+    const stockNow = v && imgs.length > 0 && imgs.every((i) => STOCK.test(i.url || ''));
+    if (stockNow) msg('#photoMsg', "This is the dealer's generic catalog picture, not the actual car. Tap Add photos to use your own.");
     $('#dDescBox').hidden = !v;
     if (v && document.activeElement !== $('#dDesc')) $('#dDesc').value = v.fb.description || '';
 
@@ -575,9 +588,51 @@
   $('#signOutBtn').onclick = async () => { await cloud.signOut(); location.reload(); };
   $('#syncFbBtn').onclick = () => { $('#menu').hidden = true; request('sync', {}, 'Sync requested'); };
   $('#renewBtn').onclick = () => { $('#menu').hidden = true; request('renew', {}, 'Renew requested'); };
+  // ---------- add a car (link + optional photos from this phone) ----------
+  let addFiles = [];
+  function renderAddThumbs() {
+    const box = $('#addThumbs');
+    box.innerHTML = '';
+    addFiles.forEach((f, i) => {
+      const t = document.createElement('div');
+      t.className = 'add-thumb';
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(f);
+      const x = document.createElement('button');
+      x.type = 'button'; x.textContent = '✕'; x.setAttribute('aria-label', 'Remove');
+      x.onclick = () => { addFiles.splice(i, 1); renderAddThumbs(); };
+      t.append(img, x);
+      box.appendChild(t);
+    });
+    $('#onlyMineRow').hidden = !addFiles.length;
+  }
   $('#addCarBtn').onclick = () => {
-    const url = prompt('Paste a vehicle link from lynnwoodhonda.com');
-    if (url && /^https?:\/\//i.test(url.trim())) request('import', { url: url.trim() }, 'Import requested');
+    addFiles = []; renderAddThumbs();
+    $('#addUrl').value = ''; $('#addMsg').textContent = ''; $('#addGo').disabled = false;
+    $('#addSheet').hidden = false;
+  };
+  $('#closeAdd').onclick = () => ($('#addSheet').hidden = true);
+  $('#addSheet').onclick = (e) => { if (e.target.id === 'addSheet') $('#addSheet').hidden = true; };
+  $('#addCarPhotos').onchange = (e) => { addFiles.push(...e.target.files); e.target.value = ''; renderAddThumbs(); };
+  $('#addGo').onclick = async () => {
+    const url = $('#addUrl').value.trim();
+    if (!/^https?:\/\//i.test(url)) { $('#addMsg').textContent = 'Paste the link to the car first.'; return; }
+    $('#addGo').disabled = true;
+    try {
+      const batch = crypto.randomUUID();
+      const photos = [];
+      for (const f of addFiles) {
+        $('#addMsg').textContent = `Uploading photo ${photos.length + 1} of ${addFiles.length}…`;
+        const path = `${uid}/incoming/${batch}/phone-${crypto.randomUUID()}.jpg`;
+        await cloud.photos.upload(path, await shrink(f));
+        photos.push(path);
+      }
+      $('#addSheet').hidden = true;
+      await request('import', { url, photos, onlyMine: photos.length > 0 && $('#onlyMine').checked }, photos.length ? `Import requested with ${photos.length} photo${photos.length === 1 ? '' : 's'}` : 'Import requested');
+    } catch (e) {
+      $('#addMsg').textContent = `Upload stopped: ${e.message}`;
+      $('#addGo').disabled = false;
+    }
   };
   $('#search').oninput = (e) => { S.search = e.target.value; render(); };
   $$('#chips .chip').forEach((b) => (b.onclick = () => { S.filter = b.dataset.f; $$('#chips .chip').forEach((x) => x.classList.toggle('active', x === b)); render(); }));

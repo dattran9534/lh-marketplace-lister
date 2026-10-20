@@ -151,3 +151,15 @@ label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-w
 .srow .sacts { margin-left: auto; display: flex; gap: 6px; flex-shrink: 0; align-self: center; }
 .srow .sbtn { font: inherit; font-size: 14px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--text); }
 .srow .sbtn:disabled { opacity: .5; }
+
+.field { display: flex; flex-direction: column; gap: 6px; font-size: 15px; margin: 8px 0 12px; }
+.field input { width: 100%; }
+.add-thumbs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0; }
+.add-thumb { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--line); }
+.add-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.add-thumb button { position: absolute; top: 4px; right: 4px; padding: 2px 7px; font-size: 13px; border-radius: 999px; background: rgba(0,0,0,.6); color: #fff; border: 0; }
+.check-row { display: flex; gap: 8px; align-items: center; font-size: 15px; margin: 6px 0; }
+#addSheet .big { width: 100%; margin-top: 6px; }
+#addSheet .check-row { flex-direction: row; justify-content: flex-start; text-align: left; color: var(--text); }
+#addSheet .check-row input { width: 22px; height: 22px; flex: none; margin: 0; }
+#addSheet .field { color: var(--text); }
