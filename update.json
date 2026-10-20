@@ -1,6 +1,6 @@
 {
-  "version": "1.11.0",
+  "version": "1.11.1",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/32842fbb797892118541a629f0e41156204e15bc/",
-  "notes": "descriptions in your post style, miles and photos on first import"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/b63e9d3b2da207204dd0eee08510dc2076592fd1/",
+  "notes": "no MPG in descriptions"
 }
