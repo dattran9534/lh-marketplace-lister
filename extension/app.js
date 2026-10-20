@@ -13,6 +13,12 @@ async function load() {
   const d = await chrome.storage.local.get(['listings', 'settings']);
   state.listings = d.listings || [];
   state.settings = { ...S.DEFAULT_SETTINGS, ...(d.settings || {}) };
+  // Your Supabase project is built in; fill it in if it was saved empty.
+  if (!state.settings.cloudUrl || !state.settings.cloudKey) {
+    state.settings.cloudUrl = S.DEFAULT_SETTINGS.cloudUrl;
+    state.settings.cloudKey = S.DEFAULT_SETTINGS.cloudKey;
+    await chrome.storage.local.set({ settings: state.settings });
+  }
 }
 let saveTimer = null;
 function save() {
