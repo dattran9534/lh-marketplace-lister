@@ -2,6 +2,10 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.7
+
+- **Learns from your best Facebook posts, including ones made before the app.** After each sync, the app reads the descriptions of your top three posts by clicks per day straight from Facebook (read only, in background tabs, nothing is changed) and the AI uses them as examples of what gets clicks. It re-reads them every two weeks. You can also click **Learn from my best posts** on the dashboard.
+
 ## What's new in 1.6
 
 - **Update photos on live posts.** On the dashboard, a live car's box has **Update photos**; the vehicle editor has **Update photos on Facebook**. It replaces the photos on Facebook with the ones selected in the app, in your order, with the dealer banner trimmed. On the phone: open a car, **Edit photos** (tap to show or hide, ◀ Earlier, ★ First), **Save order**, then **Update photos on Facebook**. Works for cars that are in the app; listings you made before the app need importing first.

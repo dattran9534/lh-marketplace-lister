@@ -368,19 +368,26 @@
     return !!m && n2(t).includes(m);
   }
 
-  // Best performers (clicks per day on Facebook) and Dat's own rewrites.
-  function learningSet(listings, fbListings, excludeId) {
+  const fbKey = (f) => `${f.title}|${f.listedOn}`;
+
+  // Your best Facebook posts by clicks per day, whose text we know (read from
+  // Facebook, or the app's own copy), plus descriptions you rewrote yourself.
+  function learningSet(listings, fbListings, excludeId, fbDesc = {}) {
+    listings = listings || [];
+    const me = listings.find((l) => l.id === excludeId);
     const winners = [];
-    for (const l of listings || []) {
-      if (l.id === excludeId || !l.fb || !l.fb.description) continue;
-      const f = (fbListings || []).find((x) => sameCar(l, x) && x.clicks > 0);
-      if (!f) continue;
+    for (const f of fbListings || []) {
+      if (!(f.clicks > 0)) continue;
+      if (me && me.fb && sameCar(me, f)) continue; // never learn from the car being written
+      const appCar = listings.find((l) => l.id !== excludeId && l.fb && l.fb.description && sameCar(l, f));
+      const text = (fbDesc[fbKey(f)] && fbDesc[fbKey(f)].text) || (appCar && appCar.fb.description) || '';
+      if (text.length < 40) continue;
       const days = daysSince(f.listedOn) || 7;
       // Rank by clicks per day, with 3 extra days added so a day-old post can't win on a lucky start.
-      winners.push({ title: f.title, clicks: f.clicks, perDay: +(f.clicks / days).toFixed(1), score: f.clicks / (days + 3), text: l.fb.description });
+      winners.push({ title: f.title, clicks: f.clicks, perDay: +(f.clicks / days).toFixed(1), score: f.clicks / (days + 3), text });
     }
     winners.sort((a, b) => b.score - a.score);
-    const edits = (listings || [])
+    const edits = listings
       .filter((l) => l.id !== excludeId && l.descBy === 'edited' && l.fb && l.fb.description)
       .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
       .slice(0, 3)
@@ -388,6 +395,18 @@
     return { winners: winners.slice(0, 3), edits };
   }
 
-  global.LHShared = { learningSet, daysSince, FB, DEFAULT_SETTINGS, toFacebook, describe, topFeatures, parseCarfax, factsFor, milesNote, firstSaleDate, certifiedInfo, certifiedSentence, mapColor, mapBody, mapFuel, mapMake, modelLine, EXT_RULES, INT_RULES };
+  // Which Facebook posts are worth reading next (top by clicks per day, text unknown or stale).
+  function postsToLearnFrom(fbListings, fbDesc = {}, n = 3) {
+    const fresh = (f) => fbDesc[fbKey(f)] && Date.now() - fbDesc[fbKey(f)].at < 14 * 86400000;
+    return (fbListings || [])
+      .filter((f) => f.clicks > 0)
+      .map((f) => ({ f, score: f.clicks / ((daysSince(f.listedOn) || 7) + 3) }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, n)
+      .map((x) => x.f)
+      .filter((f) => !fresh(f));
+  }
+
+  global.LHShared = { learningSet, postsToLearnFrom, fbKey, daysSince, FB, DEFAULT_SETTINGS, toFacebook, describe, topFeatures, parseCarfax, factsFor, milesNote, firstSaleDate, certifiedInfo, certifiedSentence, mapColor, mapBody, mapFuel, mapMake, modelLine, EXT_RULES, INT_RULES };
   if (typeof module !== 'undefined') module.exports = global.LHShared;
 })(typeof window !== 'undefined' ? window : globalThis);

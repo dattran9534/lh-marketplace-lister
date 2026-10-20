@@ -100,8 +100,8 @@ async function writeDescription(rec, say) {
   say('writing the description');
   try {
     const facts = S.factsFor(rec.raw, rec.fb, rec.carfax);
-    const { fbListings = [] } = await chrome.storage.local.get('fbListings');
-    const learn = S.learningSet(state.listings, fbListings, rec.id);
+    const { fbListings = [], fbDescriptions = {} } = await chrome.storage.local.get(['fbListings', 'fbDescriptions']);
+    const learn = S.learningSet(state.listings, fbListings, rec.id, fbDescriptions);
     const text = await AI.writeDescription(aiCfg(), facts, state.settings.opening, learn);
     rec.learnedFrom = { winners: learn.winners.map((w) => `${w.title} (${w.clicks} clicks)`), edits: learn.edits.length };
     return { text, by: 'ai' };

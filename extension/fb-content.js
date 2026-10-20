@@ -535,6 +535,15 @@
     return `${photoCount() || want} photos`;
   }
 
+  // Read-only: the listing's current description. Nothing is changed or saved.
+  async function readDescOnEditPage() {
+    const f = await waitFor(() => findField('Description'), 20000, 300);
+    if (!f) throw new Error('Description box not found');
+    await sleep(800);
+    const ta = f.matches('textarea') ? f : f.querySelector('textarea');
+    return ta ? ta.value.trim() : '';
+  }
+
   async function setPriceOnEditPage(newPrice) {
     await waitFor(() => findField('Price'), 20000, 300);
     await sleep(1500);
@@ -554,6 +563,9 @@
         await setPriceOnEditPage(job.newPrice);
         return finish({ ok: true });
       }
+      if (job.kind === 'readDesc' && EDIT.test(location.pathname)) {
+        return finish({ ok: true, description: await readDescOnEditPage() });
+      }
       if (job.kind === 'photos' && EDIT.test(location.pathname)) {
         const res = await setPhotosOnEditPage(job.images || []);
         return finish({ ok: true, message: res });
@@ -569,7 +581,7 @@
       const act = job.action;
       // The listing may be further down the page.
       if (!findCardButton(job)) await loadAllCards();
-      if (!findCardButton(job) && document.hidden) {
+      if (!findCardButton(job) && document.hidden && !job.quiet) {
         // Older listings only load in a visible tab: come to the front briefly.
         await chrome.runtime.sendMessage({ type: 'showMe' }).catch(() => {});
         await sleep(1500);
@@ -602,9 +614,10 @@
         const d = dialogSummary();
         throw new Error(`Facebook didn't apply it${d ? `. It showed: "${d}"` : ''}`);
       }
-      if (job.kind === 'price' || job.kind === 'photos') {
+      if (job.kind === 'price' || job.kind === 'photos' || job.kind === 'readDesc') {
         await clickMenuItem(job, 'Edit listing');
         await waitFor(() => EDIT.test(location.pathname), 15000, 400);
+        if (job.kind === 'readDesc') return finish({ ok: true, description: await readDescOnEditPage() });
         if (job.kind === 'photos') return finish({ ok: true, message: await setPhotosOnEditPage(job.images || []) });
         await setPriceOnEditPage(job.newPrice);
         return finish({ ok: true });

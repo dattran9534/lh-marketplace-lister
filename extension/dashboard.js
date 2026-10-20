@@ -238,6 +238,7 @@
       await loadFb();
       await reconcile();
       if (!quiet) say(`Synced ${D.fb.length} vehicle listing${D.fb.length === 1 ? '' : 's'} from Facebook.`, 'ok');
+      setTimeout(() => learnFromBest({ quiet: true }), 3000); // keep learning from your best posts
     } catch (e) {
       if (!quiet) say(e.message, 'err');
     } finally {
@@ -317,6 +318,34 @@
     }
   }
 
+  // Read the descriptions of your best posts (by clicks per day) so the AI can
+  // learn what works. Read only: nothing on Facebook is changed. One at a time,
+  // in background tabs; posts it can't reach quietly are skipped.
+  let learning = false;
+  async function learnFromBest({ quiet = false } = {}) {
+    if (learning) return;
+    learning = true;
+    try {
+      const { fbDescriptions = {} } = await chrome.storage.local.get('fbDescriptions');
+      const todo = S.postsToLearnFrom(D.fb, fbDescriptions, 3);
+      if (!todo.length) { if (!quiet) say('Already learned from your best posts. It checks again after your next sync.', 'ok'); return; }
+      let got = 0;
+      for (const f of todo) {
+        try {
+          const res = await runJob({ kind: 'readDesc', title: f.title, price: f.price, id: f.id || '', quiet: true }, `Reading your post "${f.title}" to learn from it`, quiet);
+          fbDescriptions[S.fbKey(f)] = { text: (res.ok && res.description) || '', at: Date.now() };
+          if (res.ok && res.description) got++;
+        } catch (e) {
+          fbDescriptions[S.fbKey(f)] = { text: '', at: Date.now() };
+        }
+        await chrome.storage.local.set({ fbDescriptions });
+      }
+      if (!quiet) say(got ? `Learned from ${got} of your best post${got === 1 ? '' : 's'}. New descriptions will use what works in them.` : "Couldn't read those posts this time. It will try again after the next sync.", got ? 'ok' : 'err');
+    } finally {
+      learning = false;
+    }
+  }
+
   async function setAutoPost(on) {
     if (on && !confirm('With Auto post on, each listing publishes by itself right after it fills in, without you checking it first. It only publishes when every field filled without a problem.\n\nTurn Auto post on?')) {
       $('#autoPostToggle').checked = false;
@@ -336,6 +365,7 @@
       $('#tabWork').onclick = () => showView('work');
       $('#syncBtn').onclick = () => sync();
       $('#fullSyncBtn').onclick = () => sync({ full: true });
+      $('#learnBtn').onclick = () => learnFromBest();
       $('#autoPostToggle').onchange = (e) => setAutoPost(e.target.checked);
       $('#dashSearch').oninput = (e) => { D.search = e.target.value; render(); };
       $$('#dashFilters .fchip').forEach((b) => {
