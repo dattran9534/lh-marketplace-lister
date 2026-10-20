@@ -1,6 +1,6 @@
 {
-  "version": "1.5.0",
+  "version": "1.5.1",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/974c9faee0587ed27f889d7d3e1a2a64b2088d23/",
-  "notes": "iPhone app sync"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/a08acd5718099a45447c445509cc4ab19058f8f4/",
+  "notes": "phone app connected to your Supabase project"
 }
