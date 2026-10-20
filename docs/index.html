@@ -17,19 +17,21 @@
 <body>
   <!-- Sign in -->
   <section id="login" class="screen" hidden>
-    <div class="login-card">
+    <!-- A real login form, so iPhone offers to save the password in Passwords/iCloud Keychain. -->
+    <form class="login-card" id="loginForm" method="post" action="#" autocomplete="on">
       <div class="mark">LH</div>
       <h1>LH Lister</h1>
-      <p class="muted">Sign in with the same account you use in the PC app.</p>
+      <p class="muted">Sign in once. You'll stay signed in on this phone.</p>
+      <p id="homeScreenTip" class="tip" hidden>Tip: add this to your Home Screen first (Share → <b>Add to Home Screen</b>), then open it from there and sign in. iPhone keeps the Home Screen app separate from Safari, so signing in here won't carry over.</p>
       <div id="setupFields" hidden>
         <label>Supabase project URL<input id="cfgUrl" type="url" placeholder="https://xxxx.supabase.co" autocapitalize="off"></label>
         <label>Publishable key<input id="cfgKey" type="text" placeholder="sb_publishable_..." autocapitalize="off"></label>
       </div>
-      <label>Email<input id="email" type="email" autocomplete="username" autocapitalize="off"></label>
-      <label>Password<input id="password" type="password" autocomplete="current-password"></label>
-      <button id="signInBtn" class="primary big">Sign in</button>
+      <label>Email<input id="email" name="email" type="email" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" required></label>
+      <label>Password<input id="password" name="password" type="password" autocomplete="current-password" required></label>
+      <button id="signInBtn" type="submit" class="primary big">Sign in</button>
       <p id="loginMsg" class="msg"></p>
-    </div>
+    </form>
   </section>
 
   <!-- Main -->

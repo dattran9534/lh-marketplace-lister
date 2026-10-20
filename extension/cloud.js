@@ -42,17 +42,37 @@
     }
     async function signOut() { await saveSession(null); }
 
-    async function token() {
-      const s = await loadSession();
-      if (!s) throw new Error('Not signed in to the cloud');
-      if (Date.now() > s.expires_at - 60000) {
+    // Renews the login in the background. Only a real "this login is no longer
+    // valid" answer signs you out; a weak signal or offline moment never does.
+    let refreshing = null;
+    function refresh() {
+      if (refreshing) return refreshing;
+      refreshing = (async () => {
+        const s = session;
+        let r;
         try {
-          await saveSession(await authCall('token?grant_type=refresh_token', { refresh_token: s.refresh_token }));
+          r = await fetch(`${url}/auth/v1/token?grant_type=refresh_token`, { method: 'POST', headers: baseHeaders(), body: JSON.stringify({ refresh_token: s.refresh_token }) });
         } catch (e) {
+          throw new Error("Can't reach the cloud right now. Check your connection and try again.");
+        }
+        const j = await r.json().catch(() => ({}));
+        if (r.ok) { await saveSession(j); return; }
+        if (r.status === 400 || r.status === 401 || r.status === 403) {
+          // Another window may have renewed it a moment ago: use that one.
+          const latest = await store.get(SESSION);
+          if (latest && latest.refresh_token && latest.refresh_token !== s.refresh_token) { session = latest; return; }
           await saveSession(null);
           throw new Error('Your cloud sign in expired. Sign in again.');
         }
-      }
+        throw new Error(`The cloud is busy (${r.status}). Try again in a moment.`);
+      })().finally(() => { refreshing = null; });
+      return refreshing;
+    }
+
+    async function token() {
+      const s = await loadSession();
+      if (!s) throw new Error('Not signed in to the cloud. Sign in again.');
+      if (Date.now() > s.expires_at - 60000) await refresh();
       return session.access_token;
     }
 

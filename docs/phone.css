@@ -34,6 +34,7 @@ label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-w
 .login-card h1 { margin-bottom: 4px; }
 .login-card p { margin: 0 0 20px; }
 .msg { margin-top: 12px !important; color: var(--muted); }
+.tip { text-align: left; font-size: 14px; background: color-mix(in srgb, var(--fb) 10%, var(--card)); border-radius: 12px; padding: 10px 12px; margin: 0 0 16px !important; }
 
 /* main */
 .bar { position: sticky; top: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; padding: calc(10px + var(--safe-top)) 16px 10px; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }

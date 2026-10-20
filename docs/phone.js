@@ -23,6 +23,7 @@
 
   async function start() {
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
     const cfg = config();
     $('#setupFields').hidden = !!(cfg.url && cfg.key);
     if (cfg.url && cfg.key) {
@@ -30,6 +31,9 @@
       const u = await cloud.user();
       if (u) return enter(u);
     }
+    const iPhone = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    const fromHomeScreen = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+    $('#homeScreenTip').hidden = !(iPhone && !fromHomeScreen);
     show('login');
   }
 
@@ -46,6 +50,7 @@
     msg('#loginMsg', 'Signing in…');
     try {
       const s = await cloud.signIn($('#email').value.trim(), $('#password').value);
+      try { localStorage.setItem('lhEmail', $('#email').value.trim()); } catch (e) {}
       $('#password').value = '';
       enter(s.user);
     } catch (e) {
@@ -65,6 +70,11 @@
   }
 
   function show(name) {
+    if (name === 'login') {
+      let lastEmail = '';
+      try { lastEmail = localStorage.getItem('lhEmail') || ''; } catch (e) {}
+      if (lastEmail && !$('#email').value) $('#email').value = lastEmail;
+    }
     $('#login').hidden = name !== 'login';
     $('#main').hidden = name !== 'main';
   }
@@ -97,7 +107,7 @@
       render();
       if (S.open) renderSheet();
     } catch (e) {
-      if (/sign in/i.test(e.message)) { show('login'); msg('#loginMsg', e.message); }
+      if (/sign in again/i.test(e.message)) { show('login'); msg('#loginMsg', e.message); }
       else if (!quiet) toast(e.message);
     } finally {
       loading = false;
@@ -354,8 +364,7 @@
   }
 
   // ---------- wire up ----------
-  $('#signInBtn').onclick = signIn;
-  $('#password').addEventListener('keydown', (e) => { if (e.key === 'Enter') signIn(); });
+  $('#loginForm').addEventListener('submit', (e) => { e.preventDefault(); signIn(); });
   $('#refreshBtn').onclick = () => load();
   $('#closeSheet').onclick = closeSheet;
   $('#sheet').onclick = (e) => { if (e.target.id === 'sheet') closeSheet(); };
