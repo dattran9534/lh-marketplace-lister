@@ -330,7 +330,14 @@
       const icon = c.status === 'done' ? '✓' : c.status === 'failed' ? '!' : '';
       row.innerHTML = `<span class="sicon">${icon || '<i class="spinner"></i>'}</span><span class="stext"><b></b><span></span></span>`;
       $('b', row).textContent = describeCmd(c);
-      $('.stext span', row).textContent = c.status === 'queued' ? (pcOnline() ? 'Waiting for your PC…' : 'Waiting for your PC to come online (Edge open)') : c.result || STATUS_TXT[c.status];
+      const mins = (now - new Date(c.created_at).getTime()) / 60000;
+      const slow = isPending(c) && mins > 4 ? ' (taking longer than usual)' : '';
+      $('.stext span', row).textContent = (c.status === 'queued' ? (pcOnline() ? 'Waiting for your PC…' : 'Waiting for your PC to come online (Edge open)') : c.result || STATUS_TXT[c.status]) + slow;
+      const acts = document.createElement('span');
+      acts.className = 'sacts';
+      if (isPending(c)) acts.appendChild(cmdBtn('Cancel', () => cancelCmd(c)));
+      if (c.status === 'failed' && !/^(Canceled|Tried again)$/.test(c.result || '')) acts.appendChild(cmdBtn('Try again', () => retryCmd(c)));
+      if (acts.children.length) row.appendChild(acts);
       bar.appendChild(row);
     });
   }
@@ -360,6 +367,23 @@
     } finally {
       el.disabled = false;
     }
+  }
+
+  function cmdBtn(label, fn) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'sbtn'; b.textContent = label;
+    b.onclick = async () => { b.disabled = true; try { await fn(); } catch (e) { toast(e.message); } finally { b.disabled = false; } };
+    return b;
+  }
+  async function cancelCmd(c) {
+    await cloud.db.update('commands', { id: c.id }, { status: 'failed', result: 'Canceled', done_at: new Date().toISOString() });
+    toast('Canceled');
+    lastStatus = '';
+    await load(true);
+  }
+  async function retryCmd(c) {
+    await cloud.db.update('commands', { id: c.id }, { result: 'Tried again' });
+    await request(c.kind, c.payload || {}, 'Trying again');
   }
 
   const STATUS_TXT = { queued: 'Waiting for PC', running: 'PC is working on it', done: 'Done', failed: 'Did not work' };

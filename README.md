@@ -2,6 +2,12 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.9.1
+
+- **Phone requests can't get stuck anymore.** If an import or other request stops before it finishes (the tab closed, Edge restarted, the extension updated), the PC marks it as stopped within a minute and the phone shows **Try again**. Imports also give up after 6 minutes and say which step they were stuck on, and every download and AI call now has a time limit.
+- **Cancel and Try again on the phone.** Each request in the status box has **Cancel** while it's waiting or running, and **Try again** if it didn't work.
+- Phone requests still go through even if another part of the sync hits an error.
+
 ## What's new in 1.9
 
 - **Descriptions about this car, not any car.** The AI now leads with what's unusual about each vehicle: super low miles for its age (a 2007 Fit with 62k gets "about 3,200 miles a year when most cars do 12,000"), one owner, clean title with no accidents, clean condition, sold and serviced here, AWD, great MPG, a manual, CarPlay on an older car. Filler like "perfect for the Pacific Northwest" or "making it a great choice" is cut.

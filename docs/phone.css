@@ -147,3 +147,7 @@ label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-w
 
 /* frames clip the zoomed photo so the dealer banner stays hidden */
 .card .img, .pe-img { overflow: hidden; }
+
+.srow .sacts { margin-left: auto; display: flex; gap: 6px; flex-shrink: 0; align-self: center; }
+.srow .sbtn { font: inherit; font-size: 14px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--text); }
+.srow .sbtn:disabled { opacity: .5; }
