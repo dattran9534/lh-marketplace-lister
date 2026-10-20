@@ -2,6 +2,10 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.12.1
+
+- **Check for updates sees new versions right away.** It now asks GitHub directly instead of a link that can lag up to 5 minutes behind.
+
 ## What's new in 1.12
 
 - **Colors read from the photos.** While it sorts photos, the AI now also picks the exterior and interior color from Facebook's list (light or dark grey seats become "Gray"). Interior uses what the AI sees first, since dealer interior names are often vague; exterior uses the dealer's paint name when it maps cleanly, otherwise the AI. Cars imported earlier get their colors read right before posting.
