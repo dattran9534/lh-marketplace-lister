@@ -2,6 +2,16 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.9
+
+- **Descriptions about this car, not any car.** The AI now leads with what's unusual about each vehicle: super low miles for its age (a 2007 Fit with 62k gets "about 3,200 miles a year when most cars do 12,000"), one owner, clean title with no accidents, clean condition, sold and serviced here, AWD, great MPG, a manual, CarPlay on an older car. Filler like "perfect for the Pacific Northwest" or "making it a great choice" is cut.
+- **Better photo import from the phone.** Photos are read from the dealer page's full list in the dealer's order, so a background import no longer gets 2 photos or the wrong first photo.
+- **Banner hidden on iPhone too.** The phone app now trims the Lynnwood Honda banner in previews (the PC already did). Facebook always gets the trimmed photos.
+- **Refresh from dealer site** on the phone re-imports a car with the new photo and description rules.
+- **Safe posting pace.** Cars post one at a time, 3 to 8 minutes apart, up to 5 new posts a day (change it in Settings). Extra cars wait in a posting line shown on the dashboard, with **Cancel line**. Facebook form filling also moves at a more human speed.
+- **No double posts.** If a car is already Active or Pending on Facebook, the app skips it (on the PC you can choose to post anyway).
+- **Gentler renewing.** At most 10 renewals per run, 6 to 15 seconds apart.
+
 ## What's new in 1.8.1 (phone app)
 
 - **No more blinking.** The car boxes update in place instead of redrawing every refresh.

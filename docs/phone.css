@@ -85,7 +85,8 @@ label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-w
 .grab { width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 10px; }
 .close { position: absolute; top: 8px; right: 10px; font-size: 16px; }
 .photos { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 8px -16px 8px; padding: 0 16px; }
-.photos img { flex: none; width: 82%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 12px; scroll-snap-align: center; background: var(--line); }
+.photos .ph-frame { flex: none; width: 82%; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden; scroll-snap-align: center; background: var(--line); }
+.photos .ph-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .photo-actions { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
 #dTitle { font-size: 21px; line-height: 1.25; }
 #dMeta { margin: 4px 0 8px; font-size: 14px; }
@@ -143,3 +144,6 @@ label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-w
 .switch small { display: block; font-size: 11px; color: var(--muted); line-height: 1.25; }
 .switch-note { margin: -4px 16px 10px; }
 .card .busy[hidden] { display: none; }
+
+/* frames clip the zoomed photo so the dealer banner stays hidden */
+.card .img, .pe-img { overflow: hidden; }

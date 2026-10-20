@@ -188,7 +188,14 @@
   function setImg(img, im) {
     if (!im) return;
     photoSrc(im).then((u) => { if (u) img.src = u; }).catch(() => {});
-    if (im.cropTop) img.style.objectViewBox = `inset(${(im.cropTop * 100).toFixed(1)}% 0 0 0)`;
+    // Hide the dealer banner: zoom the photo up from its bottom edge so the top
+    // strip falls outside its frame (iPhone Safari can't crop with object-view-box).
+    if (im.cropTop > 0 && im.cropTop < 0.4) {
+      img.style.transformOrigin = '50% 100%';
+      img.style.transform = `scale(${(1 / (1 - im.cropTop)).toFixed(4)})`;
+    } else {
+      img.style.transform = '';
+    }
   }
 
   // Phone photos can be huge; shrink to 2048px JPEG before uploading.
@@ -415,8 +422,8 @@
     if (ph.dataset.sig !== phSig) {
     ph.dataset.sig = phSig;
     ph.innerHTML = '';
-    if (imgs.length) imgs.forEach((im) => { const img = document.createElement('img'); img.alt = ''; img.loading = 'lazy'; setImg(img, im); ph.appendChild(img); });
-    else if (f && f.photo) { const img = document.createElement('img'); img.src = f.photo; ph.appendChild(img); }
+    if (imgs.length) imgs.forEach((im) => { const wrap = document.createElement('div'); wrap.className = 'ph-frame'; const img = document.createElement('img'); img.alt = ''; img.loading = 'lazy'; setImg(img, im); wrap.appendChild(img); ph.appendChild(wrap); });
+    else if (f && f.photo) { const wrap = document.createElement('div'); wrap.className = 'ph-frame'; const img = document.createElement('img'); img.src = f.photo; wrap.appendChild(img); ph.appendChild(wrap); }
     }
     $('.photo-actions').hidden = !v;
     $('#dDescBox').hidden = !v;
@@ -427,6 +434,9 @@
     const add = (label, cls, fn) => { const b = document.createElement('button'); b.className = cls; b.textContent = label; b.onclick = fn; acts.appendChild(b); };
     const busy = commandsFor(fresh).some(isPending);
     if (v && !f && v.status !== 'posted') add('Post to Facebook', 'primary', () => request('post', { vehicleId: v.id, title: titleOf(fresh) }, 'Posting requested'));
+    if (v && v.raw && v.raw.sourceUrl) add('Refresh from dealer site', 'secondary', () => {
+      if (confirm('Re-import this car from lynnwoodhonda.com? Price, miles, photos and CARFAX get updated. Your own description edits are kept.')) request('import', { url: v.raw.sourceUrl, title: titleOf(fresh), vehicleId: v.id }, 'Refresh requested');
+    });
     if (f) {
       const base = { title: f.title, price: f.price, listedOn: f.listedOn, vehicleId: v ? v.id : '' };
       if (v && f.status !== 'Sold') add('Update photos on Facebook', 'secondary wide', () => {
