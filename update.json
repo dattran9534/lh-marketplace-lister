@@ -1,6 +1,6 @@
 {
   "version": "1.3.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/9923ae13a199be6fd7b1a5e66cc5890427ff2021/",
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/3c546a69dac2ab3adcddcb48e9f84a9f94b0a7e9/",
   "notes": "dashboard, Facebook sync, price changes, mark sold and delete, auto post"
 }
