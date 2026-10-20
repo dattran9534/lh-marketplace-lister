@@ -1,6 +1,6 @@
 {
-  "version": "1.12.0",
+  "version": "1.12.1",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/0ca6ff5bb4ecc528c63d81c6407e1ff297076f0c/",
-  "notes": "AI reads colors from photos; auto post no longer hangs on color boxes"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/3e2879bd98767b393e2d93c88a8f465e67a9922f/",
+  "notes": "AI reads colors from photos; update check sees new versions right away"
 }
