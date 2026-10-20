@@ -1,6 +1,6 @@
 {
-  "version": "1.9.1",
+  "version": "1.10.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/1a95a1c6b8f6b6d53497e089131c1d8cc6719bf0/",
-  "notes": "phone requests can't get stuck; Cancel and Try again on the phone"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/b7325f86ea0389ac493bab74a38c65f63861d2a5/",
+  "notes": "instant phone pickup, faster imports"
 }
