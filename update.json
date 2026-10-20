@@ -1,6 +1,6 @@
 {
-  "version": "1.10.0",
+  "version": "1.11.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/b7325f86ea0389ac493bab74a38c65f63861d2a5/",
-  "notes": "instant phone pickup, faster imports"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/32842fbb797892118541a629f0e41156204e15bc/",
+  "notes": "descriptions in your post style, miles and photos on first import"
 }
