@@ -134,6 +134,7 @@
 
   async function request(kind, payload, label) {
     await cloud.db.insert('commands', [{ user_id: uid, kind, payload }]);
+    cloud.ping('cmd'); // wakes the PC right away instead of waiting for its next check
     toast(pcOnline() ? `${label}. Your PC is on it.` : `${label}. It will run when your PC has Edge open.`);
     await load(true);
     fastPoll();

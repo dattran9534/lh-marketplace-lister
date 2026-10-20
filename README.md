@@ -2,6 +2,11 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.10 (faster)
+
+- **The PC hears phone requests right away.** The phone pings the PC through a live connection the moment you tap something, instead of waiting up to a minute for the PC's next check. The regular check now runs every 30 seconds as a backup.
+- **Faster imports.** CARFAX and photo checks run at the same time, the description is written while photos are still being sorted, and fixed waits on the dealer page and CARFAX were replaced with quick checks.
+
 ## What's new in 1.9.1
 
 - **Phone requests can't get stuck anymore.** If an import or other request stops before it finishes (the tab closed, Edge restarted, the extension updated), the PC marks it as stopped within a minute and the phone shows **Try again**. Imports also give up after 6 minutes and say which step they were stuck on, and every download and AI call now has a time limit.

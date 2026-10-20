@@ -145,7 +145,23 @@
       },
     };
 
-    return { url, signIn, signUp, signOut, user, token, db, photos, account, configured: !!(url && key) };
+    // Nudge the PC right away (Supabase Realtime broadcast). Best effort: the PC
+    // also checks every 30 seconds, so a failed ping only means a short wait.
+    async function ping(event, payload) {
+      try {
+        const u = await user();
+        if (!u) return false;
+        const r = await fetch(`${url}/realtime/v1/api/broadcast`, {
+          method: 'POST',
+          headers: { ...baseHeaders(), Authorization: `Bearer ${await token()}` },
+          body: JSON.stringify({ messages: [{ topic: `lh-${u.id}`, event, payload: payload || {}, private: false }] }),
+          signal: AbortSignal.timeout(8000),
+        });
+        return r.ok;
+      } catch (e) { return false; }
+    }
+
+    return { url, key, signIn, signUp, signOut, user, token, db, photos, account, ping, configured: !!(url && key) };
   }
 
   // Cheap fingerprint to tell whether a record changed since it was last sent.
