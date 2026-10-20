@@ -72,9 +72,9 @@
   }
 
   // App side: fetch the small copy, detect the banner, make an AI thumbnail.
-  async function analyze(url, fallback) {
-    let blob = null;
-    for (const u of [smallUrl(url), url, fallback].filter(Boolean)) {
+  async function analyze(url, fallback, givenBlob) {
+    let blob = givenBlob || null;
+    if (!blob) for (const u of [smallUrl(url), url, fallback].filter(Boolean)) {
       try {
         const r = await fetch(u, { credentials: 'omit' });
         if (r.ok) { blob = await r.blob(); break; }

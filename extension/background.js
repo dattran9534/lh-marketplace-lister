@@ -1,4 +1,4 @@
-importScripts('extractor.js');
+importScripts('extractor.js', 'localphotos.js');
 
 const APP_URL = chrome.runtime.getURL('app.html');
 const COMPOSER_URL = 'https://www.facebook.com/marketplace/create/vehicle';
@@ -95,7 +95,15 @@ async function listVehicleLinks({ tabId }) {
   return { links: (res && res.result) || [] };
 }
 
-async function fetchImage({ url, fallback }) {
+async function fetchImage({ url, fallback, local }) {
+  if (local) {
+    const blob = await LHLocal.get(local);
+    if (!blob) throw new Error('Your photo was not found');
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    let bin = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    return { dataUrl: `data:${blob.type || 'image/jpeg'};base64,${btoa(bin)}` };
+  }
   for (const u of [url, fallback].filter(Boolean)) {
     try {
       const r = await fetch(u, { credentials: 'omit' });
@@ -116,7 +124,8 @@ async function openComposer({ id, ids }) {
   const list = ids || [id];
   const { pendingTabs = {} } = await chrome.storage.local.get('pendingTabs');
   for (let i = 0; i < list.length; i++) {
-    const tab = await chrome.tabs.create({ url: COMPOSER_URL, active: i === 0 });
+    // Opens behind your current tab so it doesn't interrupt you.
+    const tab = await chrome.tabs.create({ url: COMPOSER_URL, active: false });
     pendingTabs[tab.id] = { id: list[i], at: Date.now() };
     await chrome.storage.local.set({ pendingTabs });
     if (i < list.length - 1) await sleep(1500);
@@ -145,10 +154,12 @@ const SELLING_URL = 'https://www.facebook.com/marketplace/you/selling';
 async function startFbJob({ job }, sender) {
   const jobId = crypto.randomUUID();
   const url = job.kind === 'price' && job.id ? `https://www.facebook.com/marketplace/edit/?listing_id=${job.id}` : SELLING_URL;
-  // Facebook only loads more listings while the tab is visible, so open it in front.
-  const tab = await chrome.tabs.create({ url, active: true });
+  // Background tab so you can keep working. The one exception is a full sync
+  // (first time, or when asked): Facebook only loads older listings in a visible tab.
+  const front = job.kind === 'sync' && job.full;
+  const tab = await chrome.tabs.create({ url, active: !!front });
   const { fbJobs = {} } = await chrome.storage.local.get('fbJobs');
-  fbJobs[tab.id] = { ...job, jobId, at: Date.now(), returnTo: sender.tab && sender.tab.id };
+  fbJobs[tab.id] = { ...job, jobId, at: Date.now(), returnTo: front && sender.tab ? sender.tab.id : null };
   await chrome.storage.local.set({ fbJobs });
   return { jobId };
 }
@@ -167,12 +178,49 @@ async function jobDone({ jobId, result }, sender) {
   for (const k of Object.keys(jobResults)) if (Date.now() - jobResults[k].at > 60 * 60 * 1000) delete jobResults[k];
   jobResults[jobId] = { ...result, at: Date.now() };
   const update = { fbJobs, jobResults };
-  if (result.listings) { update.fbListings = result.listings; update.fbSyncedAt = Date.now(); }
+  if (result.listings) {
+    update.fbListings = await mergeListings(result.listings, result.full, job);
+    update.fbSyncedAt = Date.now();
+  }
   await chrome.storage.local.set(update);
   setTimeout(() => {
     chrome.tabs.remove(tabId).catch(() => {});
     if (job && job.returnTo) chrome.tabs.update(job.returnTo, { active: true }).catch(() => {});
   }, result.ok ? 800 : 4000);
+  return {};
+}
+
+// A full sync replaces the list. A partial one (background tab, or the cards
+// on screen when you visit your selling page) updates what it saw and keeps the rest.
+const listingKey = (l) => `${l.title}|${l.listedOn}`;
+async function mergeListings(seen, full, job) {
+  if (full) return seen;
+  const { fbListings = [] } = await chrome.storage.local.get('fbListings');
+  const byKey = new Map(seen.map((l) => [listingKey(l), l]));
+  let out = fbListings.map((old) => {
+    const fresh = byKey.get(listingKey(old));
+    if (fresh) { byKey.delete(listingKey(old)); return { ...old, ...fresh, id: fresh.id || old.id, photo: fresh.photo || old.photo }; }
+    return old;
+  });
+  // A deleted listing won't be seen again: drop it.
+  if (job && job.action === 'delete') out = out.filter((l) => !(l.title === job.title && String(l.price) === String(job.price)));
+  return [...byKey.values(), ...out];
+}
+
+async function showMe(msg, sender) {
+  const tabId = sender.tab && sender.tab.id;
+  if (tabId != null) {
+    const { fbJobs = {} } = await chrome.storage.local.get('fbJobs');
+    const t = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    if (fbJobs[tabId] && t[0] && t[0].id !== tabId) { fbJobs[tabId].returnTo = t[0].id; await chrome.storage.local.set({ fbJobs }); }
+    await chrome.tabs.update(tabId, { active: true });
+  }
+  return {};
+}
+
+async function passiveSync({ listings }) {
+  const merged = await mergeListings(listings, false, null);
+  await chrome.storage.local.set({ fbListings: merged, fbSyncedAt: Date.now() });
   return {};
 }
 
@@ -193,7 +241,7 @@ async function markPosted({ id }) {
   return {};
 }
 
-const handlers = { extractFromTab, extractFromUrl, extractCarfax, listVehicleLinks, fetchImage, openComposer, myListing, startFbJob, myJob, jobDone, cancelJob, markPosted };
+const handlers = { extractFromTab, extractFromUrl, extractCarfax, listVehicleLinks, fetchImage, openComposer, myListing, startFbJob, myJob, jobDone, cancelJob, markPosted, passiveSync, showMe };
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   const h = msg && handlers[msg.type];

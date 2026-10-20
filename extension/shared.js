@@ -175,6 +175,47 @@
   const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 
   // ---- CARFAX ------------------------------------------------------------
+  // Original in-service date: the earliest first sale event in the detailed
+  // history ("Registration issued or renewed", "Vehicle sold", "Vehicle purchase
+  // reported", "Title issued or updated", "First owner reported").
+  // Returns "YYYY-MM-DD" or ''.
+  function firstSaleDate(text) {
+    const start = text.search(/Detailed History/i);
+    const lines = (start >= 0 ? text.slice(start) : text).split('\n').map((s) => s.trim()).filter(Boolean);
+    const SALE = /Registration issued or renewed|Vehicle purchase reported|Vehicle sold|Title issued or updated|First owner reported|Titled or registered/i;
+    let date = null, best = null;
+    for (const l of lines) {
+      const m = l.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      if (m) { date = `${m[3]}-${m[1]}-${m[2]}`; continue; }
+      if (date && SALE.test(l) && (!best || date < best)) best = date;
+    }
+    return best || '';
+  }
+
+  // Honda True Certified warranty line from the dealer's terms and the in-service date.
+  function certifiedInfo(raw, carfax) {
+    if (!raw.certified) return null;
+    const months = raw.warrantyMonths || 84;
+    const miles = raw.warrantyMiles || 100000;
+    const years = months % 12 ? `${months} month` : `${months / 12} year`;
+    const terms = `${years}/${Number(miles).toLocaleString('en-US')} mile`;
+    const info = { name: raw.certified, terms, months, miles, until: '', expired: false };
+    const start = carfax && carfax.inServiceDate;
+    if (start) {
+      const d = new Date(start + 'T12:00:00');
+      d.setMonth(d.getMonth() + months);
+      info.until = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      info.expired = d < new Date();
+    }
+    if (raw.mileage && raw.mileage >= miles) info.expired = true;
+    return info;
+  }
+
+  function certifiedSentence(c) {
+    if (!c) return '';
+    if (c.expired) return `${c.name} pre-owned.`;
+    return `${c.name} pre-owned, backed by Honda's ${c.terms} powertrain warranty${c.until ? `, good until ${c.until} or ${Number(c.miles).toLocaleString('en-US')} miles` : ' from the original sale date'}.`;
+  }
   // Reads the text of a CARFAX report. Returns every fact found, split into
   // positives (safe to advertise) and negatives (never sent to the writer).
   function parseCarfax(text) {
@@ -206,6 +247,7 @@
       greatReliability: /GREAT RELIABILITY/.test(t),
       noOpenRecalls: /No open recalls/i.test(t),
       fleetOrRental: /\b(Rental|Fleet|Commercial) Vehicle\b/i.test(t),
+      inServiceDate: firstSaleDate(t),
     };
     const positives = [];
     if (f.owners === 1) positives.push('One owner');
@@ -249,6 +291,7 @@
       topFeatures: topFeatures(raw, fb),
       allFeatures: (raw.features || []).slice(0, 60),
       verifiedHistory: carfax ? carfax.positives : [],
+      certified: certifiedSentence(certifiedInfo(raw, carfax)),
     };
   }
 
@@ -272,6 +315,8 @@
     if (has(/^No accidents/)) histBits.push('no accidents reported');
     if (has(/Locally owned/)) histBits.push('locally owned');
     if (histBits.length) p1.push(cap(joinList(histBits)) + '.');
+    const cert = certifiedSentence(certifiedInfo(raw, carfax));
+    if (cert) p1.push(cert);
     const feats = topFeatures(raw, fb);
     const p2 = [];
     if (feats.length) p2.push(`Equipped with ${joinList(feats)}, making it a great ${fb.bodyStyle === 'SUV' ? 'SUV' : fb.bodyStyle === 'Truck' ? 'truck' : 'car'} for the Pacific Northwest.`);
@@ -301,6 +346,6 @@
     return fb;
   }
 
-  global.LHShared = { FB, DEFAULT_SETTINGS, toFacebook, describe, topFeatures, parseCarfax, factsFor, milesNote, mapColor, mapBody, mapFuel, mapMake, modelLine, EXT_RULES, INT_RULES };
+  global.LHShared = { FB, DEFAULT_SETTINGS, toFacebook, describe, topFeatures, parseCarfax, factsFor, milesNote, firstSaleDate, certifiedInfo, certifiedSentence, mapColor, mapBody, mapFuel, mapMake, modelLine, EXT_RULES, INT_RULES };
   if (typeof module !== 'undefined') module.exports = global.LHShared;
 })(typeof window !== 'undefined' ? window : globalThis);

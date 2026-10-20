@@ -192,11 +192,11 @@
   }
 
   // ---------- Facebook jobs ----------
-  async function runJob(job, label) {
+  async function runJob(job, label, quiet) {
     const r = await chrome.runtime.sendMessage({ type: 'startFbJob', job });
     if (!r || !r.ok) throw new Error((r && r.error) || 'Could not open Facebook');
     const jobId = r.jobId;
-    say(`${label}… a Facebook tab will open and close by itself.`);
+    if (!quiet) say(`${label}…`);
     const t0 = Date.now();
     while (Date.now() - t0 < 150000) {
       await new Promise((res) => setTimeout(res, 1000));
@@ -222,18 +222,25 @@
     if (changed) { await saveNow(); renderList(); }
   }
 
-  async function sync() {
+  // Quick sync runs in a background tab and refreshes your newest listings.
+  // Full sync (first time, or "Full sync") opens in front so Facebook loads everything.
+  let syncing = false;
+  async function sync({ full = false, quiet = false } = {}) {
+    if (syncing) return;
+    syncing = true;
     const b = $('#syncBtn');
     b.disabled = true;
+    full = full || !D.fb.length;
     try {
-      const res = await runJob({ kind: 'sync' }, 'Syncing with Facebook');
+      const res = await runJob({ kind: 'sync', full }, full ? 'Full sync with Facebook (a Facebook tab opens for a moment)' : 'Refreshing from Facebook in the background', quiet);
       if (!res.ok) throw new Error(res.error);
       await loadFb();
       await reconcile();
-      say(`Synced ${D.fb.length} vehicle listing${D.fb.length === 1 ? '' : 's'} from Facebook.`, 'ok');
+      if (!quiet) say(`Synced ${D.fb.length} vehicle listing${D.fb.length === 1 ? '' : 's'} from Facebook.`, 'ok');
     } catch (e) {
-      say(e.message, 'err');
+      if (!quiet) say(e.message, 'err');
     } finally {
+      syncing = false;
       b.disabled = false;
       render();
     }
@@ -252,6 +259,7 @@
       if (stored) stored.price = v;
       await chrome.storage.local.set({ fbListings: D.fb });
       say(`${f.title} is now ${money(v)} on Facebook.`, 'ok');
+      sync({ quiet: true }); // refresh from Facebook in the background
     } catch (e) {
       say(`Price not changed on Facebook: ${e.message}`, 'err');
     } finally {
@@ -302,7 +310,8 @@
       await loadFb();
       $('#tabDash').onclick = () => showView('dash');
       $('#tabWork').onclick = () => showView('work');
-      $('#syncBtn').onclick = sync;
+      $('#syncBtn').onclick = () => sync();
+      $('#fullSyncBtn').onclick = () => sync({ full: true });
       $('#autoPostToggle').onchange = (e) => setAutoPost(e.target.checked);
       $('#dashSearch').oninput = (e) => { D.search = e.target.value; render(); };
       $$('#dashFilters .fchip').forEach((b) => {

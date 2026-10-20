@@ -198,6 +198,17 @@ async function extractVehicle() {
   const cf = [...document.querySelectorAll('a[href*="carfax.com/vehiclehistory" i], a[href*="carfax.com/VehicleHistory" i]')][0];
   v.carfaxUrl = cf ? cf.href : '';
 
+  // Honda True Certified badge (img.honda-true-certified-logo, alt "Honda True Certified").
+  const badge = [...document.querySelectorAll('img.honda-true-certified-logo, img[alt*="Honda True Certified" i], img[alt*="HondaTrue Certified" i], img[src*="hondatrue" i]')]
+    .find((i) => !i.closest('header, nav, footer, [class*="similar" i], [class*="related" i]'));
+  v.certified = badge ? (badge.getAttribute('alt') || 'Honda True Certified').trim() : '';
+  if (v.certified) {
+    // Use the dealer's own stated terms, e.g. "Powertrain Limited Warranty: 84 Month/100,000 Mile ... from original in-service date".
+    const w = body.match(/Powertrain Limited Warranty:?\s*(\d+)\s*Month\s*\/\s*([\d,]+)\s*Mile/i);
+    v.warrantyMonths = w ? +w[1] : 84;
+    v.warrantyMiles = w ? +w[2].replace(/,/g, '') : 100000;
+  }
+
   v.extractedAt = Date.now();
   return v;
 }

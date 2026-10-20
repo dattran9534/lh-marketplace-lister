@@ -182,3 +182,8 @@ a.link { color: var(--fb); font-size: 13px; text-decoration: none; padding: 2px 
 .box-actions .danger { margin-left: auto; }
 .empty { text-align: center; padding: 40px 0; }
 @media (max-width: 900px) { .stats { grid-template-columns: repeat(2, 1fr); } .dash-right input { width: 100%; } .tabs { order: 3; } }
+
+/* ---- v1.4 ---- */
+.ph .mine { position: absolute; bottom: 5px; right: 5px; padding: 1px 6px; border-radius: 999px; font-size: 10px; font-weight: 700; color: #fff; background: #b45309; }
+.ph .rm { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; padding: 0; border-radius: 50%; border: 0; background: rgba(0,0,0,.65); color: #fff; font-size: 15px; line-height: 22px; }
+.photos.dropping { outline: 3px dashed var(--fb); outline-offset: 4px; border-radius: 8px; }

@@ -143,6 +143,7 @@
     '- Use only the facts provided. Anything about owners, accidents, title, service history or where it was owned may ONLY come from "Verified history". If a topic is not listed there, do not mention it at all, not even to say it is unknown.\n' +
     '- Never mention damage, accidents, repairs, multiple owners, rental or fleet use, or anything negative.\n' +
     '- Never give a number of service records or visits. Say it is well serviced instead.\n' +
+    '- If a "Certified pre-owned" line is given, include it in paragraph one, keeping its warranty terms and date exactly as given. Never mention certification or warranty otherwise.\n' +
     '- Only call the miles low if the mileage line says so.\n' +
     '- Only mention AWD, 4WD or all wheel drive if the drive line says so.\n' +
     '- No price, payments, financing, phone numbers, hashtags or markdown. No emoji except the one in the opening line.\n' +
@@ -165,6 +166,7 @@
       facts.topFeatures.length && `Most wanted features it has: ${facts.topFeatures.join(', ')}`,
       facts.allFeatures.length && `Full feature list: ${facts.allFeatures.join(', ')}`,
       `Verified history: ${facts.verifiedHistory.length ? facts.verifiedHistory.join('; ') : 'none provided'}`,
+      facts.certified && `Certified pre-owned: ${facts.certified}`,
     ].filter(Boolean);
     const text = await run(cfg, 'writer', { system: SYSTEM, parts: [{ text: lines.join('\n') }], maxTokens: 4000 });
     let out = text.replace(/^["'`]+|["'`]+$/g, '').replace(/\*\*/g, '').replace(/\n{2,}/g, '\n').trim();

@@ -2,6 +2,15 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.4
+
+- **Fixed: Mark sold and Delete.** The app now finds Facebook's confirm buttons even when other dialogs (chats, notifications) are open, answers Facebook's follow-up questions, and checks that the change really happened. If Facebook shows something unexpected, the box tells you what it said.
+- **Fixed: Auto post.** It now clicks Next and Publish (Facebook labels those buttons twice, which the old version missed), and it starts by itself right after you import a car. It only stops if a must-have field (type, year, make, model, mileage, price, photos) didn't fill.
+- **Works in the background.** Posting, price changes and Mark/Delete open Facebook in a tab behind the one you're on, so you can keep working. "Full sync" still opens in front for a moment because Facebook only loads older listings in a visible tab.
+- **Auto refresh.** After a price change or Mark/Delete, the dashboard refreshes from Facebook by itself. If you edit a listing on Facebook directly, the dashboard picks up the change the next time you open your selling page.
+- **Honda True Certified.** When the dealer page shows the Honda True Certified badge, the description says so, with Honda's 7 year/100,000 mile powertrain warranty and the date it runs to (7 years from the first sale date on the CARFAX).
+- **Add your own photos.** In the vehicle editor, click "Add your photos" or drag photos onto the grid. To use iPhone photos on your PC, turn on iCloud Photos on the iPhone and install iCloud for Windows; your photos then show up in the "iCloud Photos" folder on the PC.
+
 ## What's new in 1.3
 
 - **Dashboard home page.** Every car shows as a box: photo, price, miles, status (Not posted, Active, Pending, Sold), listed date and clicks, plus totals at the top.

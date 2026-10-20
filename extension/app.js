@@ -64,7 +64,7 @@ async function getCarfax(raw, say) {
 // Banner check on every photo, then (optionally) AI sorting.
 async function processPhotos(images, say, { sort = true } = {}) {
   say('checking photos');
-  const results = await pool(images, 6, (im) => IMG.analyze(im.url, im.fallback).catch(() => ({ cropTop: 0, thumb: null })));
+  const results = await pool(images, 6, (im) => (im.local ? LHLocal.get(im.local).then((b) => IMG.analyze('', '', b)) : IMG.analyze(im.url, im.fallback)).catch(() => ({ cropTop: 0, thumb: null })));
   let out = images.map((im, i) => ({ ...im, cropTop: results[i].cropTop }));
   let note = '';
   if (sort && state.settings.sortPhotos && aiReady() && results.some((r) => r.thumb)) {
@@ -103,7 +103,9 @@ async function writeDescription(rec, say) {
 
 async function buildRecord(raw, existing, say) {
   const carfax = await getCarfax(raw, say);
-  const photos = await processPhotos((raw.images || []).map((im) => ({ url: im.url, fallback: im.fallback || '' })), say);
+  // Keep any photos you added yourself when re-importing.
+  const mine = existing ? (existing.images || []).filter((im) => im.local).map(({ local }) => ({ local, url: '', fallback: '' })) : [];
+  const photos = await processPhotos([...(raw.images || []).map((im) => ({ url: im.url, fallback: im.fallback || '' })), ...mine], say);
   const rec = {
     id: existing ? existing.id : crypto.randomUUID(),
     createdAt: existing ? existing.createdAt : Date.now(),
@@ -148,6 +150,7 @@ async function importUrls(urls) {
   $('#importBtn').disabled = true;
   let ok = 0, last = null;
   const errors = [];
+  const imported = [];
   for (let i = 0; i < urls.length; i++) {
     try {
       last = await importOne(async () => {
@@ -155,6 +158,7 @@ async function importUrls(urls) {
         if (!r || !r.ok) throw new Error(r ? r.error : 'no response');
         return r.data;
       }, `Vehicle ${i + 1} of ${urls.length}`);
+      imported.push(last);
       ok++;
     } catch (e) {
       errors.push(`${urls[i].replace(/^https?:\/\/(www\.)?[^/]+/, '').slice(0, 50)}: ${e.message}`);
@@ -165,6 +169,16 @@ async function importUrls(urls) {
   if (last) select(last.id);
   if (errors.length) setStatus(`Imported ${ok}. Problems: ${errors.join(' · ')}`, 'err');
   else { setStatus(`Imported ${ok} vehicle${ok === 1 ? '' : 's'}.`, 'ok'); $('#urls').value = ''; }
+  await autoPostAfterImport(imported);
+}
+
+// With Auto post on, newly imported cars go straight to Facebook (in background tabs).
+async function autoPostAfterImport(recs) {
+  if (!state.settings.autoPost) return;
+  const ready = recs.filter((r) => r && r.status !== 'posted' && !missingFields(r).length);
+  if (!ready.length) return;
+  await post(ready.map((r) => r.id), { quiet: true });
+  setStatus(`Auto post: posting ${ready.length} vehicle${ready.length === 1 ? '' : 's'} in background tabs. They publish by themselves when they finish filling.`, 'ok');
 }
 
 async function importFromTab() {
@@ -188,6 +202,7 @@ async function importFromTab() {
     }, 'Importing');
     select(rec.id);
     setStatus(`Imported ${rec.fb.year} ${rec.fb.make} ${rec.fb.model}.`, 'ok');
+    await autoPostAfterImport([rec]);
   } catch (e) {
     setStatus(e.message, 'err');
   } finally {
@@ -242,6 +257,7 @@ function updateBatch() {
 }
 
 function setThumb(img, im) {
+  if (im.local) { LHLocal.objectUrl(im.local).then((u) => { if (u) img.src = u; }); return; }
   img.src = IMG.smallUrl(im.url);
   img.onerror = function () { if (this.src !== im.url) this.src = im.url; };
   if (state.settings.removeBanner && im.cropTop) img.style.objectViewBox = `inset(${(im.cropTop * 100).toFixed(1)}% 0 0 0)`;
@@ -328,9 +344,17 @@ function renderPhotos() {
     if (n > max) d.classList.add('over');
     d.innerHTML = `<img alt="" loading="lazy" referrerpolicy="no-referrer"><span class="n">${im.on ? n : ''}</span>` +
       (im.kind && KIND[im.kind] ? `<span class="kind ${im.kind}">${KIND[im.kind]}</span>` : '') +
-      (im.cropTop && state.settings.removeBanner ? '<span class="trim" title="Dealer banner will be trimmed off">Banner off</span>' : '');
+      (im.cropTop && state.settings.removeBanner ? '<span class="trim" title="Dealer banner will be trimmed off">Banner off</span>' : '') +
+      (im.local ? '<span class="mine">Yours</span><button class="rm" title="Remove this photo">×</button>' : '');
     setThumb($('img', d), im);
     d.onclick = () => { im.on = !im.on; save(); renderPhotos(); renderList(); };
+    const rm = $('.rm', d);
+    if (rm) rm.onclick = async (e) => {
+      e.stopPropagation();
+      l.images.splice(i, 1);
+      await LHLocal.del(im.local).catch(() => {});
+      await saveNow(); renderPhotos(); renderList();
+    };
     d.ondragstart = (e) => { e.dataTransfer.setData('text/plain', String(i)); d.classList.add('drag'); };
     d.ondragend = () => d.classList.remove('drag');
     d.ondragover = (e) => { e.preventDefault(); d.classList.add('target'); };
@@ -376,19 +400,20 @@ function missingFields(l) {
   return ['year', 'make', 'model', 'price', 'mileage'].filter((f) => !l.fb[f]);
 }
 
-async function post(ids) {
+async function post(ids, { quiet = false } = {}) {
   const list = ids.map((id) => state.listings.find((l) => l.id === id)).filter(Boolean);
   const bad = list.filter((l) => missingFields(l).length);
   if (bad.length) {
     alert(bad.map((l) => `${l.fb.year} ${l.fb.make} ${l.fb.model}: fill in ${missingFields(l).join(', ')}`).join('\n'));
     return;
   }
-  if (list.length > 6 && !confirm(`Open ${list.length} Facebook tabs at once? Each one fills on its own. Posting a lot at once can make Facebook slow you down, so 5 or 6 at a time is safer.`)) return;
+  if (!quiet && list.length > 6 && !confirm(`Open ${list.length} Facebook tabs at once? Each one fills on its own. Posting a lot at once can make Facebook slow you down, so 5 or 6 at a time is safer.`)) return;
   list.forEach((l) => { if (l.status !== 'posted') l.status = 'opened'; });
   await saveNow();
   renderList();
   renderEditor();
   await send({ type: 'openComposer', ids: list.map((l) => l.id) });
+  if (!quiet) setStatus(`Opened ${list.length} Facebook tab${list.length === 1 ? '' : 's'} in the background.${state.settings.autoPost ? ' Auto post will publish when filling finishes.' : ' Switch to a tab to review and publish.'}`, 'ok');
 }
 
 async function reimport() {
@@ -423,11 +448,36 @@ async function rewrite() {
   renderEditor();
 }
 
+// Your own photos go in after the dealer's exterior shots and are turned on.
+async function addOwnPhotos(files) {
+  const l = current();
+  if (!l || !files.length) return;
+  const btn = $('#addPhotosBtn');
+  btn.disabled = true;
+  try {
+    let n = 0;
+    for (const f of files) {
+      btn.textContent = `Adding ${++n} of ${files.length}…`;
+      const id = await LHLocal.add(f);
+      l.images.push({ local: id, url: '', fallback: '', on: true, cropTop: 0, kind: '' });
+    }
+    l.updatedAt = Date.now();
+    await saveNow();
+    setStatus(`Added ${files.length} photo${files.length === 1 ? '' : 's'}. Drag to put them where you want, or click "Sort with AI".`, 'ok');
+  } catch (e) {
+    setStatus(`Couldn't add photos: ${e.message}`, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Add your photos';
+    renderPhotos(); renderList();
+  }
+}
+
 async function resort() {
   const l = current();
   $('#sortBtn').disabled = true;
   $('#sortBtn').textContent = 'Sorting…';
-  const r = await processPhotos(l.images.map(({ url, fallback }) => ({ url, fallback })), () => {});
+  const r = await processPhotos(l.images.map(({ url, fallback, local }) => ({ url, fallback, local })), () => {});
   l.images = r.images;
   l.photoNote = r.note;
   await saveNow();
@@ -552,6 +602,17 @@ async function init() {
   $('#photosFirst20').onclick = () => { const l = current(); l.images.forEach((im, i) => (im.on = i < 20)); save(); renderPhotos(); };
   $('#photosNone').onclick = () => { current().images.forEach((im) => (im.on = false)); save(); renderPhotos(); };
   $('#sortBtn').onclick = resort;
+  $('#addPhotosBtn').onclick = () => $('#addPhotosInput').click();
+  $('#addPhotosInput').onchange = async (e) => { await addOwnPhotos([...e.target.files]); e.target.value = ''; };
+  const grid = $('#photoGrid');
+  grid.addEventListener('dragover', (e) => { if ([...e.dataTransfer.types].includes('Files')) { e.preventDefault(); grid.classList.add('dropping'); } });
+  grid.addEventListener('dragleave', () => grid.classList.remove('dropping'));
+  grid.addEventListener('drop', async (e) => {
+    if (!e.dataTransfer.files.length) return;
+    e.preventDefault();
+    grid.classList.remove('dropping');
+    await addOwnPhotos([...e.dataTransfer.files].filter((f) => /^image\//.test(f.type) || /\.(heic|heif)$/i.test(f.name)));
+  });
   $('#regenBtn').onclick = rewrite;
   $('#copyBtn').onclick = async () => {
     await navigator.clipboard.writeText(current().fb.description || '');

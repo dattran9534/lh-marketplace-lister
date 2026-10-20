@@ -157,7 +157,7 @@
     const worker = async () => {
       while (next < images.length) {
         const i = next++;
-        const r = await chrome.runtime.sendMessage({ type: 'fetchImage', url: images[i].url, fallback: images[i].fallback });
+        const r = await chrome.runtime.sendMessage({ type: 'fetchImage', url: images[i].url, fallback: images[i].fallback, local: images[i].local });
         if (r && r.ok) {
           const removeBanner = settingsCache.removeBanner !== false;
           const jpg = await LHImage.finalize(dataUrlToBlob(r.dataUrl), removeBanner ? images[i].cropTop || 0 : 0);
@@ -238,15 +238,20 @@
       await step('Description', () => setText('Description', fb.description));
       if (photoJob) await photoJob;
       const errs = logEl.querySelectorAll('li.err').length;
+      // Auto post needs Facebook's must-have fields; a missed optional one (say interior color) is OK.
+      const MUST = ['Vehicle type', 'Year', 'Make', 'Model', 'Mileage', 'Price', 'Photos'];
+      const blocking = [...logEl.querySelectorAll('li.err')].map((li) => li.dataset.step).filter((s) => MUST.includes(s));
       const foot = panel.querySelector('.lhml-foot');
-      if (only === null && settings.autoPost && !errs) {
+      if (only === null && settings.autoPost && blocking.length) {
+        foot.textContent = `Auto post stopped: ${blocking.join(', ')} didn't fill. Fix ${blocking.length > 1 ? 'them' : 'it'}, then publish yourself.`;
+      } else if (only === null && settings.autoPost) {
         foot.textContent = 'Auto post is on: publishing…';
         await step('Publish', (r) => autoPublish(listing, r));
         const failed = logEl.querySelector('li.err[data-step="Publish"]');
         foot.textContent = failed ? 'Could not publish automatically. Check the form and publish it yourself.' : 'Published. You can close this tab.';
       } else {
         foot.textContent = errs
-          ? `Done. ${errs} field${errs > 1 ? 's' : ''} need a quick look, then review and publish.${settings.autoPost ? ' (Auto post skipped because of this.)' : ''}`
+          ? `Done. ${errs} field${errs > 1 ? 's' : ''} need a quick look, then review and publish.`
           : 'Done. Review the listing, then publish it yourself.';
       }
     } finally {
@@ -319,10 +324,12 @@
   }
 
   // ---------- auto post ----------
+  // Facebook buttons often carry the same word as label AND text ("Next" + "Next"),
+  // so test each one on its own.
+  const labelMatches = (b, re) => re.test((b.getAttribute('aria-label') || '').trim()) || re.test((b.innerText || '').trim());
+  const enabled = (b) => b.getAttribute('aria-disabled') !== 'true' && !b.disabled;
   const btnByText = (re) =>
-    [...document.querySelectorAll('[role="button"], button')].find((b) => visible(b) && !inPanel(b) &&
-      re.test(((b.getAttribute('aria-label') || '') + ' ' + (b.innerText || '')).trim()) &&
-      b.getAttribute('aria-disabled') !== 'true' && !b.disabled);
+    [...document.querySelectorAll('[role="button"], button')].find((b) => visible(b) && !inPanel(b) && labelMatches(b, re) && enabled(b));
 
   async function autoPublish(listing, report) {
     const want = (listing.images || []).filter((i) => i.on).slice(0, settingsCache.maxPhotos || 20).length;
@@ -460,15 +467,41 @@
     item.click();
   }
 
-  // Facebook sometimes asks a follow up question; answer it the safe way.
-  async function confirmDialog(confirmRe, timeout = 4000) {
-    const btn = await waitFor(() => {
-      const dlg = [...document.querySelectorAll('[role="dialog"]')].filter(visible).pop();
-      if (!dlg) return null;
-      return [...dlg.querySelectorAll('[role="button"], button')].find((b) => visible(b) && confirmRe.test((b.getAttribute('aria-label') || b.innerText || '').trim()) && b.getAttribute('aria-disabled') !== 'true');
-    }, timeout);
-    if (btn) { btn.click(); await sleep(1200); }
+  // Facebook keeps other dialogs around (chats, notifications), so look in
+  // every visible dialog, preferring the one that mentions this listing.
+  const openDialogs = () => [...document.querySelectorAll('[role="dialog"], [role="alertdialog"]')].filter((d) => visible(d) && !inPanel(d));
+  function dialogButton(confirmRe, hint) {
+    const dlgs = openDialogs().sort((a, b) => (hint && b.innerText.includes(hint) ? 1 : 0) - (hint && a.innerText.includes(hint) ? 1 : 0));
+    for (const d of dlgs) {
+      const btn = [...d.querySelectorAll('[role="button"], button')].find((b) => visible(b) && enabled(b) && labelMatches(b, confirmRe));
+      if (btn) return btn;
+    }
+    return null;
+  }
+  async function confirmDialog(confirmRe, timeout = 4000, hint = '') {
+    const btn = await waitFor(() => dialogButton(confirmRe, hint), timeout);
+    if (btn) { btn.click(); await sleep(1500); }
     return !!btn;
+  }
+  const dialogSummary = () => openDialogs().map((d) => d.innerText.replace(/\s+/g, ' ').slice(0, 160)).filter(Boolean).join(' / ');
+
+  // Current status of the job's listing on the selling page ('' if it's gone).
+  function listingStatus(job) {
+    const hit = findCardButton(job);
+    if (!hit) return '';
+    const raw = (textOf(hit.card).match(STATUS_RE) || [])[2] || '';
+    return STATUS_MAP[raw] || raw;
+  }
+
+  // Wait until Facebook shows the result, answering any follow up dialogs.
+  async function waitForResult(job, done, answerRe) {
+    for (let i = 0; i < 20; i++) {
+      if (done()) return true;
+      const b = dialogButton(answerRe, job.title);
+      if (b) { b.click(); await sleep(1500); continue; }
+      await sleep(800);
+    }
+    return done();
   }
 
   async function setPriceOnEditPage(newPrice) {
@@ -495,28 +528,46 @@
       await sleep(1500);
       if (job.kind === 'sync') {
         await loadAllCards();
-        return finish({ ok: true, listings: scrapeCards() });
+        // A background tab may not load the older listings; the app merges instead of replacing.
+        return finish({ ok: true, listings: scrapeCards(), full: !document.hidden });
       }
       const act = job.action;
+      // The listing may be further down the page.
+      if (!findCardButton(job)) await loadAllCards();
+      if (!findCardButton(job) && document.hidden) {
+        // Older listings only load in a visible tab: come to the front briefly.
+        await chrome.runtime.sendMessage({ type: 'showMe' }).catch(() => {});
+        await sleep(1500);
+        await loadAllCards();
+      }
+      if (!findCardButton(job)) throw new Error('Listing not found on your selling page. Try Sync first.');
+      // Buttons that answer Facebook's follow up questions. Never Cancel/Close.
+      const ANSWER = /^(Mark as sold|Mark as available|Mark as pending|Mark out of stock|Mark in stock|Skip|Not now|Done|Confirm|Continue|Next|Save|Submit|Someone else|Sold elsewhere|Sold somewhere else|I'm not sure|Prefer not to say)$/i;
+      let ok = true;
       if (act === 'sold' || act === 'available') {
         const hit = findCardButton(job);
-        if (!hit) throw new Error('Listing not found on your selling page');
         const b = cardButton(hit.card, act === 'sold' ? /^Mark (as sold|out of stock)\b/i : /^Mark (as available|in stock)\b/i);
         if (!b) throw new Error(act === 'sold' ? 'This listing has no "Mark as sold" button (already sold?)' : 'This listing is not marked sold');
         b.scrollIntoView({ block: 'center' });
         b.click();
         await sleep(1500);
-        // "Who bought it?" style prompts: skip naming a buyer.
-        await confirmDialog(act === 'sold' ? /^(Mark as sold|Skip|Not now|Done|Confirm)$/i : /^(Mark as available|Confirm|Done)$/i);
+        const want = act === 'sold' ? 'Sold' : 'Active';
+        ok = await waitForResult(job, () => listingStatus(job) === want, ANSWER);
       } else if (act === 'pending') {
         await clickMenuItem(job, 'Mark as pending');
         await sleep(1500);
-        await confirmDialog(/^(Mark as pending|Confirm|Done)$/i);
+        ok = await waitForResult(job, () => listingStatus(job) === 'Pending', ANSWER);
       } else if (act === 'delete') {
         await clickMenuItem(job, 'Delete listing');
-        const ok = await confirmDialog(/^Delete$/i, 8000);
-        if (!ok) throw new Error('Facebook did not ask to confirm the delete');
-      } else if (job.kind === 'price') {
+        const confirmed = await confirmDialog(/^Delete$/i, 8000, job.title);
+        if (!confirmed) throw new Error(`Facebook did not show the delete confirmation${dialogSummary() ? ': ' + dialogSummary() : ''}`);
+        ok = await waitForResult(job, () => !findCardButton(job), /^Delete$/i);
+      }
+      if (job.kind === 'action' && !ok) {
+        const d = dialogSummary();
+        throw new Error(`Facebook didn't apply it${d ? `. It showed: "${d}"` : ''}`);
+      }
+      if (job.kind === 'price') {
         await clickMenuItem(job, 'Edit listing');
         await waitFor(() => EDIT.test(location.pathname), 15000, 400);
         await setPriceOnEditPage(job.newPrice);
@@ -530,12 +581,28 @@
   }
 
   let jobRunning = false;
+  // Ask a few times: the job can be registered a moment after the tab opens.
   async function checkJob() {
-    if (jobRunning) return;
-    const r = await chrome.runtime.sendMessage({ type: 'myJob' }).catch(() => null);
-    if (!r || !r.job) return;
-    jobRunning = true;
-    try { await runJob(r.job); } finally { jobRunning = false; }
+    if (jobRunning) return true;
+    for (let i = 0; i < 8; i++) {
+      const r = await chrome.runtime.sendMessage({ type: 'myJob' }).catch(() => null);
+      if (r && r.job) {
+        jobRunning = true;
+        try { await runJob(r.job); } finally { jobRunning = false; }
+        return true;
+      }
+      await sleep(1000);
+    }
+    return false;
+  }
+
+  // When you open your selling page yourself (for example after editing a
+  // listing on Facebook), quietly send what's on screen to the app.
+  async function passiveSync() {
+    await waitFor(() => document.querySelector(MORE), 15000, 500);
+    await sleep(2000);
+    const listings = scrapeCards();
+    if (listings.length) chrome.runtime.sendMessage({ type: 'passiveSync', listings }).catch(() => {});
   }
 
   function unmount() {
@@ -548,6 +615,8 @@
     if (location.pathname === lastPath) return;
     lastPath = location.pathname;
     COMPOSER.test(location.pathname) ? waitFor(() => findField('Vehicle type'), 15000, 300).then(mount) : unmount();
-    if (SELLING.test(location.pathname) || EDIT.test(location.pathname)) checkJob();
+    if (SELLING.test(location.pathname) || EDIT.test(location.pathname)) {
+      checkJob().then((hadJob) => { if (!hadJob && SELLING.test(location.pathname)) passiveSync(); });
+    }
   }, 700);
 })();
