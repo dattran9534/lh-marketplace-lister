@@ -21,9 +21,19 @@
     return { url: c.url || saved.url || '', key: c.key || saved.key || '' };
   }
 
+  // iPhone Safari ignores the "no zoom" setting on its own, so block the gestures too.
+  function lockZoom() {
+    const stop = (e) => e.preventDefault();
+    ['gesturestart', 'gesturechange', 'gestureend'].forEach((t) => document.addEventListener(t, stop, { passive: false }));
+    // Two fingers on the screen = pinch: block it (one finger still scrolls).
+    document.addEventListener('touchmove', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+    // Double tap zoom is already off through touch-action in phone.css; quick repeated taps stay normal.
+  }
+
   async function start() {
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
     if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+    lockZoom();
     const cfg = config();
     $('#setupFields').hidden = !!(cfg.url && cfg.key);
     if (cfg.url && cfg.key) {
@@ -105,7 +115,7 @@
       S.pcSeen = fb && fb[0] && fb[0].pc_seen_at ? new Date(fb[0].pc_seen_at) : null;
       S.commands = cmds || [];
       render();
-      if (S.open) renderSheet();
+      if (S.open && !draft) renderSheet();
     } catch (e) {
       if (/sign in again/i.test(e.message)) { show('login'); msg('#loginMsg', e.message); }
       else if (!quiet) toast(e.message);
@@ -262,7 +272,7 @@
   const STATUS_TXT = { queued: 'Waiting for PC', running: 'PC is working on it', done: 'Done', failed: 'Did not work' };
   function describeCmd(c) {
     const p = c.payload || {};
-    const what = c.kind === 'price' ? `Price ${money(p.newPrice)}` : c.kind === 'action' ? ({ sold: 'Mark sold', pending: 'Mark pending', available: 'Mark available', delete: 'Delete' }[p.action] || p.action) : c.kind === 'post' ? 'Post to Facebook' : c.kind === 'import' ? 'Import' : c.kind === 'sync' ? 'Sync with Facebook' : c.kind;
+    const what = c.kind === 'price' ? `Price ${money(p.newPrice)}` : c.kind === 'action' ? ({ sold: 'Mark sold', pending: 'Mark pending', available: 'Mark available', delete: 'Delete' }[p.action] || p.action) : c.kind === 'photos' ? 'Update photos on Facebook' : c.kind === 'post' ? 'Post to Facebook' : c.kind === 'import' ? 'Import' : c.kind === 'sync' ? 'Sync with Facebook' : c.kind;
     return `${what}${p.title ? ' · ' + p.title : ''}`;
   }
   function cmdRow(c) {
@@ -286,6 +296,7 @@
 
   // ---------- car sheet ----------
   function openSheet(it) {
+    closePhotoEditor();
     S.open = it;
     $('#sheet').hidden = false;
     document.body.classList.add('noscroll');
@@ -324,6 +335,11 @@
     if (v && !f && v.status !== 'posted') add('Post to Facebook', 'primary', () => request('post', { vehicleId: v.id, title: titleOf(fresh) }, 'Posting requested'));
     if (f) {
       const base = { title: f.title, price: f.price, listedOn: f.listedOn, vehicleId: v ? v.id : '' };
+      if (v && f.status !== 'Sold') add('Update photos on Facebook', 'secondary wide', () => {
+        const n = (v.images || []).filter((i) => i.on).slice(0, 20).length;
+        if (!n) return toast('Show at least one photo first (Edit photos).');
+        if (confirm(`Replace the photos on Facebook with the ${n} photo${n === 1 ? '' : 's'} shown here?`)) request('photos', { ...base, fbId: f.id || '' }, 'Photo update requested');
+      });
       if (f.status === 'Active' || f.status === 'Pending') add('Mark sold', 'secondary', () => request('action', { ...base, action: 'sold' }, 'Mark sold requested'));
       if (f.status === 'Active') add('Mark pending', 'secondary', () => request('action', { ...base, action: 'pending' }, 'Mark pending requested'));
       if (f.status === 'Sold') add('Mark available', 'secondary', () => request('action', { ...base, action: 'available' }, 'Mark available requested'));
@@ -336,6 +352,62 @@
     const rbox = $('#dRequests');
     rbox.innerHTML = '';
     reqs.forEach((c) => rbox.appendChild(cmdRow(c)));
+  }
+
+  // ---------- photo editor ----------
+  let draft = null;
+  function openPhotoEditor() {
+    const v = S.open && S.open.v;
+    if (!v) return;
+    draft = (v.images || []).map((im) => ({ ...im }));
+    $('#photoEditor').hidden = false;
+    $('#editPhotosBtn').hidden = true;
+    renderPhotoEditor();
+  }
+  function closePhotoEditor() {
+    draft = null;
+    $('#photoEditor').hidden = true;
+    $('#editPhotosBtn').hidden = false;
+  }
+  function renderPhotoEditor() {
+    const g = $('#peGrid');
+    g.innerHTML = '';
+    let n = 0;
+    draft.forEach((im, i) => {
+      const t = document.createElement('div');
+      t.className = 'pe' + (im.on ? ' on' : '');
+      const num = im.on ? ++n : 0;
+      t.innerHTML = `<div class="pe-img"><img alt=""><span class="pe-n">${im.on ? num : 'Hidden'}</span></div>` +
+        `<div class="pe-btns"><button class="pe-left" aria-label="Move earlier">◀ Earlier</button><button class="pe-first" aria-label="Make first">★ First</button>` +
+        (im.cloud && /\/phone-/.test(im.cloud) ? '<button class="pe-del" aria-label="Delete photo">✕</button>' : '') + '</div>';
+      if (num > 20) t.classList.add('over');
+      setImg($('img', t), im);
+      $('.pe-img', t).onclick = () => { im.on = !im.on; renderPhotoEditor(); };
+      $('.pe-left', t).onclick = (e) => { e.stopPropagation(); if (i > 0) { [draft[i - 1], draft[i]] = [draft[i], draft[i - 1]]; renderPhotoEditor(); } };
+      $('.pe-first', t).onclick = (e) => { e.stopPropagation(); draft.unshift(draft.splice(i, 1)[0]); draft[0].on = true; renderPhotoEditor(); };
+      const del = $('.pe-del', t);
+      if (del) del.onclick = (e) => { e.stopPropagation(); if (confirm('Delete this photo?')) { draft.splice(i, 1); renderPhotoEditor(); } };
+      g.appendChild(t);
+    });
+  }
+  async function savePhotoEditor() {
+    const v = S.open && S.open.v;
+    if (!v || !draft) return;
+    const removed = (v.images || []).filter((im) => im.cloud && /\/phone-/.test(im.cloud) && !draft.some((d) => d.cloud === im.cloud)).map((im) => im.cloud);
+    v.images = draft;
+    $('#peSave').disabled = true;
+    try {
+      await saveVehicle(v);
+      if (removed.length) cloud.photos.remove(removed).catch(() => {});
+      closePhotoEditor();
+      const live = S.open.f && S.open.f.status !== 'Sold';
+      toast(live ? 'Saved. Tap "Update photos on Facebook" to send them to the live post.' : 'Photo order saved.');
+      renderSheet(); render();
+    } catch (e) {
+      toast(`Not saved: ${e.message}`);
+    } finally {
+      $('#peSave').disabled = false;
+    }
   }
 
   async function savePrice() {
@@ -383,6 +455,9 @@
   $('#dPriceCancel').onclick = () => ($('#dPriceEdit').hidden = true);
   $('#dPriceSave').onclick = savePrice;
   $('#dDescSave').onclick = saveDesc;
+  $('#editPhotosBtn').onclick = openPhotoEditor;
+  $('#peCancel').onclick = closePhotoEditor;
+  $('#peSave').onclick = savePhotoEditor;
   $('#addPhotos').onchange = (e) => { addPhotos([...e.target.files]); e.target.value = ''; };
 
   start();

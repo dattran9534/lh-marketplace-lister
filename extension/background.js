@@ -159,7 +159,7 @@ const SELLING_URL = 'https://www.facebook.com/marketplace/you/selling';
 
 async function startFbJob({ job }, sender) {
   const jobId = crypto.randomUUID();
-  const url = job.kind === 'price' && job.id ? `https://www.facebook.com/marketplace/edit/?listing_id=${job.id}` : SELLING_URL;
+  const url = (job.kind === 'price' || job.kind === 'photos') && job.id ? `https://www.facebook.com/marketplace/edit/?listing_id=${job.id}` : SELLING_URL;
   // Background tab so you can keep working. The one exception is a full sync
   // (first time, or when asked): Facebook only loads older listings in a visible tab.
   const front = job.kind === 'sync' && job.full;

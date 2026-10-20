@@ -504,6 +504,37 @@
     return done();
   }
 
+  // ---------- replace the photos on a live listing ----------
+  const photoCount = () => { const m = document.body.innerText.match(/Photos\s*·\s*(\d+)\s*\/\s*\d+/); return m ? +m[1] : document.querySelectorAll('[aria-label^="Remove photo "]').length; };
+
+  async function setPhotosOnEditPage(images) {
+    if (!images.length) throw new Error('No photos are selected for this car');
+    await waitFor(() => document.querySelector('[aria-label^="Remove photo "]') && btnByText(/^Update$/), 20000, 400);
+    await sleep(1500);
+    // 1. Take the current photos off (nothing is saved until Update).
+    for (let guard = 0; guard < 30; guard++) {
+      const rm = [...document.querySelectorAll('[aria-label^="Remove photo "]')].filter(visible).pop();
+      if (!rm) break;
+      const before = photoCount();
+      rm.click();
+      await waitFor(() => photoCount() < before, 4000, 150);
+    }
+    if (document.querySelector('[aria-label^="Remove photo "]')) throw new Error("Couldn't remove the old photos");
+    // 2. Upload the new set, same way as a new post (banner trimmed, your order).
+    const msg = await addPhotos(images, () => {});
+    const want = Math.min(images.length, 20);
+    const ok = await waitFor(() => photoCount() >= want - 1, 120000, 1000);
+    if (!ok) throw new Error(`Only ${photoCount()} of ${want} photos uploaded (${msg})`);
+    await sleep(3000);
+    // 3. Save.
+    const upd = await waitFor(() => btnByText(/^Update$/), 30000, 500);
+    if (!upd) throw new Error('Update button not found');
+    upd.click();
+    const done = await waitFor(() => !EDIT.test(location.pathname) || !btnByText(/^Update$/), 45000, 800);
+    if (!done) throw new Error('Facebook did not confirm the new photos');
+    return `${photoCount() || want} photos`;
+  }
+
   async function setPriceOnEditPage(newPrice) {
     await waitFor(() => findField('Price'), 20000, 300);
     await sleep(1500);
@@ -522,6 +553,10 @@
       if (job.kind === 'price' && EDIT.test(location.pathname)) {
         await setPriceOnEditPage(job.newPrice);
         return finish({ ok: true });
+      }
+      if (job.kind === 'photos' && EDIT.test(location.pathname)) {
+        const res = await setPhotosOnEditPage(job.images || []);
+        return finish({ ok: true, message: res });
       }
       if (!SELLING.test(location.pathname)) return;
       await waitFor(() => document.querySelector('[aria-label^="More options for "]') || /no listings/i.test(document.body.innerText), 20000, 500);
@@ -567,9 +602,10 @@
         const d = dialogSummary();
         throw new Error(`Facebook didn't apply it${d ? `. It showed: "${d}"` : ''}`);
       }
-      if (job.kind === 'price') {
+      if (job.kind === 'price' || job.kind === 'photos') {
         await clickMenuItem(job, 'Edit listing');
         await waitFor(() => EDIT.test(location.pathname), 15000, 400);
+        if (job.kind === 'photos') return finish({ ok: true, message: await setPhotosOnEditPage(job.images || []) });
         await setPriceOnEditPage(job.newPrice);
         return finish({ ok: true });
       }

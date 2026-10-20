@@ -2,6 +2,12 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.6
+
+- **Update photos on live posts.** On the dashboard, a live car's box has **Update photos**; the vehicle editor has **Update photos on Facebook**. It replaces the photos on Facebook with the ones selected in the app, in your order, with the dealer banner trimmed. On the phone: open a car, **Edit photos** (tap to show or hide, ◀ Earlier, ★ First), **Save order**, then **Update photos on Facebook**. Works for cars that are in the app; listings you made before the app need importing first.
+- **AI that learns what gets leads.** Descriptions now follow lead-focused rules (the first two or three lines carry the best selling points because that's all Facebook shows before "See more", buyer search words, no hype). The AI also studies your three best posts by clicks per day from your last Facebook sync, and any description you rewrote yourself. The editor shows which posts it learned from. Re-importing a car keeps your own rewrite.
+- **Phone app doesn't zoom.** No pinch zoom, double tap zoom, or zooming in when you tap a text box.
+
 ## What's new in 1.5: the iPhone app
 
 LH Lister for iPhone lives at **https://dattran9534.github.io/lh-marketplace-lister/**. Open it in Safari, tap Share, then **Add to Home Screen**. From the phone you can:

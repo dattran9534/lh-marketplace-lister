@@ -164,6 +164,7 @@
     if (l) acts.appendChild(btn('Open', 'secondary', () => openInEditor(l.id), 'Photos, details and description'));
     if (l && !f) acts.appendChild(btn(state.settings.autoPost ? 'Post (auto)' : 'Post', 'primary', () => post([l.id])));
     if (f) {
+      if (l && f.status !== 'Sold') acts.appendChild(btn('Update photos', 'secondary', () => updatePhotos(it, key), 'Replace the photos on Facebook with the ones selected in the app'));
       if (f.status === 'Active') {
         acts.appendChild(btn('Mark sold', 'secondary', () => fbAction(it, key, 'sold')));
         acts.appendChild(btn('Mark pending', 'secondary', () => fbAction(it, key, 'pending')));
@@ -268,6 +269,29 @@
     }
   }
 
+  // Replace a live listing's photos with the car's selected photos in the app.
+  const photoJobImages = (l) => (l.images || []).filter((i) => i.on).slice(0, state.settings.maxPhotos || 20)
+    .map(({ url, fallback, local, cloud, cropTop }) => ({ url, fallback, local, cloud, cropTop }));
+
+  async function updatePhotos(it, key) {
+    const { l, f } = it;
+    const imgs = photoJobImages(l);
+    if (!imgs.length) { say('Select at least one photo for this car first (Open → Photos).', 'err'); return; }
+    if (!confirm(`Replace the photos on "${f.title}" with the ${imgs.length} photo${imgs.length === 1 ? '' : 's'} selected in the app?`)) return;
+    D.busy.add(key); render();
+    try {
+      const res = await runJob({ kind: 'photos', title: f.title, price: f.price, id: f.id || '', images: imgs }, `Updating photos on Facebook (${imgs.length})`);
+      if (!res.ok) throw new Error(res.error);
+      say(`${f.title}: photos updated on Facebook (${res.message || imgs.length + ' photos'}).`, 'ok');
+      sync({ quiet: true });
+    } catch (e) {
+      say(`Photos not updated: ${e.message}`, 'err');
+    } finally {
+      D.busy.delete(key);
+      render();
+    }
+  }
+
   const ACTION_TEXT = {
     sold: ['Marking as sold', 'marked as sold'],
     pending: ['Marking as pending', 'marked as pending'],
@@ -331,5 +355,8 @@
       showView(params.get('view') === 'work' ? 'work' : 'dash');
     },
     render,
+    // For the vehicle editor: the live Facebook listing for a car, if any.
+    liveFor(id) { const it = items().find((x) => x.l && x.l.id === id); return it && it.f && it.f.status !== 'Sold' ? it : null; },
+    updatePhotos(id) { const it = items().find((x) => x.l && x.l.id === id); if (it && it.f) { showView('dash'); updatePhotos(it, it.l.id); } },
   };
 })();

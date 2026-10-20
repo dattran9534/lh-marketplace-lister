@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>LH Lister</title>
   <meta name="theme-color" content="#c8102e">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -71,6 +71,14 @@
       <div id="dPhotos" class="photos"></div>
       <div class="photo-actions">
         <label class="btn secondary"><input id="addPhotos" type="file" accept="image/*" multiple hidden>Add photos</label>
+        <button id="editPhotosBtn" class="secondary">Edit photos</button>
+      </div>
+      <div id="photoEditor" class="photo-editor" hidden>
+        <p class="muted small">Tap a photo to show or hide it. ◀ moves it earlier, ★ makes it the first photo. Facebook uses the first 20 shown.</p>
+        <div id="peGrid" class="pe-grid"></div>
+        <div class="pe-actions"><button id="peCancel" class="link">Cancel</button><button id="peSave" class="primary">Save order</button></div>
+      </div>
+      <div class="photo-msg-row">
         <span id="photoMsg" class="muted small"></span>
       </div>
       <h2 id="dTitle"></h2>

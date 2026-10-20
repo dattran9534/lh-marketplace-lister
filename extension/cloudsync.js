@@ -61,6 +61,19 @@
       }
       return { sold: 'Marked as sold', pending: 'Marked as pending', available: 'Back on the market', delete: 'Deleted from Facebook' }[p.action] || 'Done';
     },
+    // Replace a live listing's photos with the car's current selection
+    // (the phone's latest edits were pulled in just before this runs).
+    async photos(p) {
+      const { listings = [], settings = {} } = await chrome.storage.local.get(['listings', 'settings']);
+      const l = listings.find((x) => x.id === p.vehicleId);
+      if (!l) throw new Error('That car is not on the PC yet');
+      const images = (l.images || []).filter((i) => i.on).slice(0, settings.maxPhotos || 20)
+        .map(({ url, fallback, local, cloud, cropTop }) => ({ url, fallback, local, cloud, cropTop }));
+      if (!images.length) throw new Error('No photos are selected for this car');
+      const r = await runFbJob({ kind: 'photos', title: p.title, price: p.price, id: p.fbId || '', images }, 240000);
+      if (!r.ok) throw new Error(r.error);
+      return `Photos updated on Facebook (${r.message || images.length + ' photos'})`;
+    },
     async post(p) {
       const { listings = [] } = await chrome.storage.local.get('listings');
       const l = listings.find((x) => x.id === p.vehicleId);

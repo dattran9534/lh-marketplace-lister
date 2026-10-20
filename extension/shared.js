@@ -348,6 +348,46 @@
     return fb;
   }
 
-  global.LHShared = { FB, DEFAULT_SETTINGS, toFacebook, describe, topFeatures, parseCarfax, factsFor, milesNote, firstSaleDate, certifiedInfo, certifiedSentence, mapColor, mapBody, mapFuel, mapMake, modelLine, EXT_RULES, INT_RULES };
+  // ---- learning from Dat's own posts ------------------------------------
+  // "10/19" -> days since that date (assumes the most recent such date).
+  function daysSince(listedOn, now = new Date()) {
+    const m = String(listedOn || '').match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/);
+    if (!m) return null;
+    let y = m[3] ? (+m[3] < 100 ? 2000 + +m[3] : +m[3]) : now.getFullYear();
+    let d = new Date(y, +m[1] - 1, +m[2]);
+    if (!m[3] && d > now) d = new Date(y - 1, +m[1] - 1, +m[2]);
+    return Math.max(1, Math.round((now - d) / 86400000));
+  }
+
+  const n2 = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  function sameCar(l, f) {
+    const t = (f.title || '').toLowerCase();
+    if (!t.startsWith(String(l.fb.year))) return false;
+    if (!n2(t).includes(n2(l.fb.make))) return false;
+    const m = n2((l.fb.model || '').split(' ')[0]);
+    return !!m && n2(t).includes(m);
+  }
+
+  // Best performers (clicks per day on Facebook) and Dat's own rewrites.
+  function learningSet(listings, fbListings, excludeId) {
+    const winners = [];
+    for (const l of listings || []) {
+      if (l.id === excludeId || !l.fb || !l.fb.description) continue;
+      const f = (fbListings || []).find((x) => sameCar(l, x) && x.clicks > 0);
+      if (!f) continue;
+      const days = daysSince(f.listedOn) || 7;
+      // Rank by clicks per day, with 3 extra days added so a day-old post can't win on a lucky start.
+      winners.push({ title: f.title, clicks: f.clicks, perDay: +(f.clicks / days).toFixed(1), score: f.clicks / (days + 3), text: l.fb.description });
+    }
+    winners.sort((a, b) => b.score - a.score);
+    const edits = (listings || [])
+      .filter((l) => l.id !== excludeId && l.descBy === 'edited' && l.fb && l.fb.description)
+      .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+      .slice(0, 3)
+      .map((l) => l.fb.description);
+    return { winners: winners.slice(0, 3), edits };
+  }
+
+  global.LHShared = { learningSet, daysSince, FB, DEFAULT_SETTINGS, toFacebook, describe, topFeatures, parseCarfax, factsFor, milesNote, firstSaleDate, certifiedInfo, certifiedSentence, mapColor, mapBody, mapFuel, mapMake, modelLine, EXT_RULES, INT_RULES };
   if (typeof module !== 'undefined') module.exports = global.LHShared;
 })(typeof window !== 'undefined' ? window : globalThis);

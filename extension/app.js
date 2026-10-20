@@ -100,7 +100,10 @@ async function writeDescription(rec, say) {
   say('writing the description');
   try {
     const facts = S.factsFor(rec.raw, rec.fb, rec.carfax);
-    const text = await AI.writeDescription(aiCfg(), facts, state.settings.opening);
+    const { fbListings = [] } = await chrome.storage.local.get('fbListings');
+    const learn = S.learningSet(state.listings, fbListings, rec.id);
+    const text = await AI.writeDescription(aiCfg(), facts, state.settings.opening, learn);
+    rec.learnedFrom = { winners: learn.winners.map((w) => `${w.title} (${w.clicks} clicks)`), edits: learn.edits.length };
     return { text, by: 'ai' };
   } catch (e) {
     return { text: fallback, by: 'template', error: e.message };
@@ -123,6 +126,12 @@ async function buildRecord(raw, existing, say) {
     photoNote: photos.note,
   };
   rec.fb = S.toFacebook(raw, state.settings, carfax);
+  if (existing && existing.descBy === 'edited' && existing.fb && existing.fb.description) {
+    // Keep your own rewrite; re-import only refreshes price, miles, photos and CARFAX.
+    rec.fb.description = existing.fb.description;
+    rec.descBy = 'edited';
+    return rec;
+  }
   const d = await writeDescription(rec, say);
   rec.fb.description = d.text;
   rec.descBy = d.by;
@@ -309,7 +318,10 @@ function renderEditor() {
   $$('[data-raw]').forEach((el) => { const r = l.raw[el.dataset.raw]; el.textContent = r ? `Dealer: ${r}` : ''; });
   renderHistory(l);
   $('#descHint').textContent =
-    l.descBy === 'ai' ? 'Written by AI from the dealer page and the positive CARFAX facts. Edit anything before posting.'
+    l.descBy === 'edited' ? 'Your edit. The AI uses your rewrites to learn how you like posts to sound.'
+    : l.descBy === 'ai' ? 'Written by AI from the dealer page and the positive CARFAX facts' + (l.learnedFrom && (l.learnedFrom.winners.length || l.learnedFrom.edits)
+        ? `, learning from ${[l.learnedFrom.winners.length ? `your best posts: ${l.learnedFrom.winners.join(', ')}` : '', l.learnedFrom.edits ? `${l.learnedFrom.edits} of your own rewrites` : ''].filter(Boolean).join(' and ')}.`
+        : '. It learns from your best posts once you sync with Facebook.') + ' Edit anything before posting.'
       : l.descError ? `AI writer failed (${l.descError}), so this is the basic version.`
         : aiReady() && state.settings.useAI ? 'Basic version. Click "Rewrite with AI" for an AI written one.'
           : 'Basic version. Add an API key in Settings to have AI write these.';
@@ -339,6 +351,8 @@ const KIND = { exterior: 'Ext', exterior_detail: 'Detail', interior: 'Int', othe
 
 function renderPhotos() {
   const l = current();
+  const live = window.Dash && Dash.liveFor && Dash.liveFor(l.id);
+  $('#fbPhotosBtn').hidden = !live;
   const grid = $('#photoGrid');
   grid.innerHTML = '';
   const max = state.settings.maxPhotos || 20;
@@ -393,6 +407,7 @@ function onFieldChange(e) {
   let v = el.type === 'checkbox' ? el.checked : el.value;
   if (['year', 'mileage', 'price'].includes(f)) v = v === '' ? '' : Math.round(Number(v));
   if (f === 'vin') v = String(v).toUpperCase();
+  if (f === 'description') l.descBy = 'edited'; // your rewrites teach the AI your voice
   l.fb[f] = v;
   l.updatedAt = Date.now();
   save();
@@ -688,6 +703,7 @@ async function init() {
   $('#photosFirst20').onclick = () => { const l = current(); l.images.forEach((im, i) => (im.on = i < 20)); save(); renderPhotos(); };
   $('#photosNone').onclick = () => { current().images.forEach((im) => (im.on = false)); save(); renderPhotos(); };
   $('#sortBtn').onclick = resort;
+  $('#fbPhotosBtn').onclick = () => Dash.updatePhotos(current().id);
   $('#addPhotosBtn').onclick = () => $('#addPhotosInput').click();
   $('#addPhotosInput').onchange = async (e) => { await addOwnPhotos([...e.target.files]); e.target.value = ''; };
   const grid = $('#photoGrid');

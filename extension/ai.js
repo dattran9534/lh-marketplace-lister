@@ -139,6 +139,12 @@
     '1. First line: the opening line you are given, copied exactly.\n' +
     '2. Paragraph one: start with "Recently arrived!" then the year, make, model (and AWD or 4WD if it has it) and the strongest points: mileage if it is low, then the verified history facts in one short sentence.\n' +
     '3. Paragraph two: one or two sentences on two or three standout features and why it suits drivers here in the Pacific Northwest, ending with a short line on why it is a good find.\n\n' +
+    'What gets more messages from buyers:\n' +
+    '- Facebook shows only the first two or three lines before "See more", so the "Recently arrived!" sentence must carry the biggest selling points: AWD/4WD, low miles, one owner, certified, standout trim.\n' +
+    '- Use the plain words buyers search and scan for: AWD, low miles, one owner, clean title, no accidents, well serviced, certified, third row, Apple CarPlay, heated seats, sunroof, hybrid, MPG.\n' +
+    '- Lead with history and two or three standout features. Never list every option.\n' +
+    '- Sound like a real local seller, not an ad: no hype words (amazing, incredible, must see, won\'t last, deal of a lifetime), no ALL CAPS, no exclamation mark pile ups beyond the opening line. Facebook shows less of salesy posts.\n' +
+    '- Give one concrete reason a local buyer would want it (commute, winter roads, family trips, fuel savings).\n\n' +
     'Rules:\n' +
     '- Use only the facts provided. Anything about owners, accidents, title, service history or where it was owned may ONLY come from "Verified history". If a topic is not listed there, do not mention it at all, not even to say it is unknown.\n' +
     '- Never mention damage, accidents, repairs, multiple owners, rental or fleet use, or anything negative.\n' +
@@ -148,10 +154,26 @@
     '- Only mention AWD, 4WD or all wheel drive if the drive line says so.\n' +
     '- No price, payments, financing, phone numbers, hashtags or markdown. No emoji except the one in the opening line.\n' +
     '- Never write "Just got this one in".\n' +
-    '- 45 to 85 words after the opening line, two paragraphs on separate lines, no blank lines.\n' +
+    '- 55 to 100 words after the opening line, two paragraphs on separate lines, no blank lines.\n' +
+    '- If you are shown Dat\'s best performing posts or his own edits, copy what works in them (hooks, order, word choices, length) but never their facts.\n' +
     'Reply with the post text only.';
 
-  async function writeDescription(cfg, facts, opening) {
+  // learn: { winners: [{ text, title, clicks, perDay }], edits: [text] } from Dat's own posts.
+  function learnBlock(learn) {
+    if (!learn) return '';
+    const out = [];
+    if (learn.winners && learn.winners.length) {
+      out.push("Dat's posts that got the most clicks per day on Facebook. Copy what makes them work, not their facts:");
+      learn.winners.forEach((w, i) => out.push(`--- Top post ${i + 1}: ${w.title}, ${w.clicks} clicks (${w.perDay} a day) ---\n${w.text}`));
+    }
+    if (learn.edits && learn.edits.length) {
+      out.push('Descriptions Dat rewrote himself. This is exactly how he likes them to sound:');
+      learn.edits.forEach((t, i) => out.push(`--- Dat's edit ${i + 1} ---\n${t}`));
+    }
+    return out.length ? out.join('\n') + '\n\nNow write the post for this car:\n' : '';
+  }
+
+  async function writeDescription(cfg, facts, opening, learn) {
     const lines = [
       `Opening line: ${opening}`,
       `Vehicle: ${facts.vehicle}`,
@@ -168,7 +190,7 @@
       `Verified history: ${facts.verifiedHistory.length ? facts.verifiedHistory.join('; ') : 'none provided'}`,
       facts.certified && `Certified pre-owned: ${facts.certified}`,
     ].filter(Boolean);
-    const text = await run(cfg, 'writer', { system: SYSTEM, parts: [{ text: lines.join('\n') }], maxTokens: 4000 });
+    const text = await run(cfg, 'writer', { system: SYSTEM, parts: [{ text: learnBlock(learn) + lines.join('\n') }], maxTokens: 4000 });
     let out = text.replace(/^["'`]+|["'`]+$/g, '').replace(/\*\*/g, '').replace(/\n{2,}/g, '\n').trim();
     if (opening && !out.startsWith(opening.slice(0, 12))) out = `${opening}\n${out}`;
     return out.replace(/just got this one in/gi, 'Recently arrived');
