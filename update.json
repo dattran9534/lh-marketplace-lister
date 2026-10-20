@@ -1,6 +1,6 @@
 {
-  "version": "1.7.0",
+  "version": "1.8.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/0b5efb24324adb40ee97879554c1997bdc4faa35/",
-  "notes": "AI learns from your best Facebook posts"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/13d28e62eb1c963daec001779c563c786d297261/",
+  "notes": "auto renew listings, shorter certified warranty line"
 }
