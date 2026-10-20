@@ -2,6 +2,27 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.5: the iPhone app
+
+LH Lister for iPhone lives at **https://dattran9534.github.io/lh-marketplace-lister/**. Open it in Safari, tap Share, then **Add to Home Screen**. From the phone you can:
+
+- See every car as a box, with Active / Pending / Sold / Not posted and clicks.
+- Change prices, Mark sold / pending / available, Delete, and Post to Facebook.
+- Take or pick photos and add them to a car. They show up on the PC and get posted with the car.
+- Edit descriptions.
+- Add a car by pasting a lynnwoodhonda.com link.
+
+Anything that happens on Facebook is done by your PC: the phone sends the request, and the PC carries it out the next time Edge is open (the phone shows "PC online" or when it was last seen). Prices on cars that aren't on Facebook yet, photos and descriptions change right away.
+
+### One time setup
+
+1. In Supabase, open **SQL Editor**, paste everything from `cloud/setup.sql` (in the extension folder), and click **Run**.
+2. In the PC app, open **Settings → Phone app**, paste the project URL and publishable key, enter your email and a password, and click **Create account**. Confirm the email Supabase sends, then click **Sign in**.
+3. In Supabase, go to **Authentication → Sign In / Providers** and turn off **Allow new users to sign up**, so nobody else can make an account in your project.
+4. On the iPhone, open the link above in Safari, sign in with the same email and password, then Share → **Add to Home Screen**.
+
+The free Supabase plan includes 500 MB of data and 1 GB of photos. It pauses a project after 7 days with no use; if that ever happens, open supabase.com and click **Restore**.
+
 ## What's new in 1.4
 
 - **Fixed: Mark sold and Delete.** The app now finds Facebook's confirm buttons even when other dialogs (chats, notifications) are open, answers Facebook's follow-up questions, and checks that the change really happened. If Facebook shows something unexpected, the box tells you what it said.

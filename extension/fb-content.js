@@ -157,7 +157,7 @@
     const worker = async () => {
       while (next < images.length) {
         const i = next++;
-        const r = await chrome.runtime.sendMessage({ type: 'fetchImage', url: images[i].url, fallback: images[i].fallback, local: images[i].local });
+        const r = await chrome.runtime.sendMessage({ type: 'fetchImage', url: images[i].url, fallback: images[i].fallback, local: images[i].local, cloud: images[i].cloud });
         if (r && r.ok) {
           const removeBanner = settingsCache.removeBanner !== false;
           const jpg = await LHImage.finalize(dataUrlToBlob(r.dataUrl), removeBanner ? images[i].cropTop || 0 : 0);

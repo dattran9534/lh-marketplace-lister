@@ -1,4 +1,4 @@
-importScripts('extractor.js', 'localphotos.js');
+importScripts('extractor.js', 'localphotos.js', 'cloud.js', 'cloudsync.js');
 
 const APP_URL = chrome.runtime.getURL('app.html');
 const COMPOSER_URL = 'https://www.facebook.com/marketplace/create/vehicle';
@@ -95,9 +95,15 @@ async function listVehicleLinks({ tabId }) {
   return { links: (res && res.result) || [] };
 }
 
-async function fetchImage({ url, fallback, local }) {
-  if (local) {
-    const blob = await LHLocal.get(local);
+async function fetchImage({ url, fallback, local, cloud: cloudPath }) {
+  if (local || cloudPath) {
+    let blob = local ? await LHLocal.get(local).catch(() => null) : null;
+    if (!blob && cloudPath) {
+      // A photo added on the phone.
+      const { settings = {} } = await chrome.storage.local.get('settings');
+      const c = LHCloud({ url: settings.cloudUrl, key: settings.cloudKey, store: { get: async (k) => (await chrome.storage.local.get(k))[k], set: async (k, v) => chrome.storage.local.set({ [k]: v }) } });
+      blob = await c.photos.download(cloudPath);
+    }
     if (!blob) throw new Error('Your photo was not found');
     const bytes = new Uint8Array(await blob.arrayBuffer());
     let bin = '';
@@ -241,7 +247,7 @@ async function markPosted({ id }) {
   return {};
 }
 
-const handlers = { extractFromTab, extractFromUrl, extractCarfax, listVehicleLinks, fetchImage, openComposer, myListing, startFbJob, myJob, jobDone, cancelJob, markPosted, passiveSync, showMe };
+const handlers = { extractFromTab, extractFromUrl, extractCarfax, listVehicleLinks, fetchImage, openComposer, myListing, startFbJob, myJob, jobDone, cancelJob, markPosted, passiveSync, showMe, cloudSyncNow: async () => { await LHCloudSync.syncOnce(); return {}; } };
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   const h = msg && handlers[msg.type];

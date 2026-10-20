@@ -189,6 +189,26 @@
       <label class="check"><input id="setFillLocation" type="checkbox"> Fill the Location field</label>
       <label>Location<input id="setLocation" type="text"></label>
 
+      <h3>Phone app</h3>
+      <p class="hint">Connects this PC to the iPhone app through your free Supabase project. Your PC needs Edge open for phone requests (price changes, posting) to go through.</p>
+      <label>Supabase project URL<input id="setCloudUrl" type="text" placeholder="https://xxxx.supabase.co" autocomplete="off"></label>
+      <label>Publishable key<input id="setCloudKey" type="text" placeholder="sb_publishable_..." autocomplete="off"></label>
+      <div id="cloudSignedOut">
+        <label>Email<input id="cloudEmail" type="email" autocomplete="username"></label>
+        <label>Password<input id="cloudPassword" type="password" autocomplete="current-password"></label>
+        <div class="row">
+          <button type="button" id="cloudSignInBtn" class="primary">Sign in</button>
+          <button type="button" id="cloudSignUpBtn" class="secondary">Create account</button>
+        </div>
+      </div>
+      <div id="cloudSignedIn" class="row" hidden>
+        <span id="cloudWho" class="muted"></span>
+        <button type="button" id="cloudSyncBtn" class="secondary">Sync now</button>
+        <button type="button" id="cloudSignOutBtn" class="link">Sign out</button>
+      </div>
+      <small id="cloudStatus" class="muted"></small>
+      <p class="hint">Phone app: <a id="phoneLink" target="_blank" rel="noopener"></a></p>
+
       <h3>Updates</h3>
       <div class="row">
         <span id="setVersion" class="muted"></span>
@@ -208,6 +228,7 @@
   <script src="shared.js"></script>
   <script src="imageproc.js"></script>
   <script src="localphotos.js"></script>
+  <script src="cloud.js"></script>
   <script src="ai.js"></script>
   <script src="updater.js"></script>
   <script src="app.js"></script>

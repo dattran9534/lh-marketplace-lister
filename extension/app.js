@@ -257,7 +257,8 @@ function updateBatch() {
 }
 
 function setThumb(img, im) {
-  if (im.local) { LHLocal.objectUrl(im.local).then((u) => { if (u) img.src = u; }); return; }
+  if (im.local) { LHLocal.objectUrl(im.local).then((u) => { if (u) img.src = u; else if (im.cloud) cloudThumb(im.cloud).then((c) => (img.src = c)).catch(() => {}); }); return; }
+  if (im.cloud) { cloudThumb(im.cloud).then((u) => (img.src = u)).catch(() => {}); return; }
   img.src = IMG.smallUrl(im.url);
   img.onerror = function () { if (this.src !== im.url) this.src = im.url; };
   if (state.settings.removeBanner && im.cropTop) img.style.objectViewBox = `inset(${(im.cropTop * 100).toFixed(1)}% 0 0 0)`;
@@ -490,7 +491,7 @@ async function resort() {
 const SETTING_INPUTS = {
   opening: '#setOpening', location: '#setLocation', condition: '#setCondition',
   useAI: '#setUseAI', sortPhotos: '#setSortPhotos', removeBanner: '#setRemoveBanner', autoFill: '#setAutoFill',
-  fillVin: '#setFillVin', fillLocation: '#setFillLocation',
+  fillVin: '#setFillVin', fillLocation: '#setFillLocation', cloudUrl: '#setCloudUrl', cloudKey: '#setCloudKey',
 };
 
 const keyDraft = { gemini: '', anthropic: '' };
@@ -500,6 +501,84 @@ function showProvider() {
   $('#setApiKey').placeholder = p.placeholder;
   $('#setApiKey').value = keyDraft[$('#setProvider').value] || '';
   $('#keyStatus').textContent = p.help;
+}
+
+// ---------- phone app / cloud ----------
+const PHONE_APP_URL = 'https://dattran9534.github.io/lh-marketplace-lister/';
+const chromeStore = { get: async (k) => (await chrome.storage.local.get(k))[k], set: async (k, v) => chrome.storage.local.set({ [k]: v }) };
+function cloudClient(urlOverride, keyOverride) {
+  const url = urlOverride || state.settings.cloudUrl, key = keyOverride || state.settings.cloudKey;
+  return url && key ? LHCloud({ url, key, store: chromeStore }) : null;
+}
+
+async function renderCloud() {
+  const c = cloudClient();
+  const who = c && (await c.user());
+  $('#cloudSignedOut').hidden = !!who;
+  $('#cloudSignedIn').hidden = !who;
+  $('#cloudWho').textContent = who ? `Signed in as ${who.email}` : '';
+  const { cloudLastSync, cloudError } = await chrome.storage.local.get(['cloudLastSync', 'cloudError']);
+  $('#cloudStatus').textContent = !who ? 'Not connected.' : cloudError ? `Last sync problem: ${cloudError}` : cloudLastSync ? `Last synced ${new Date(cloudLastSync).toLocaleTimeString()}.` : 'Waiting for the first sync.';
+  const a = $('#phoneLink'); a.href = PHONE_APP_URL; a.textContent = PHONE_APP_URL;
+}
+
+async function cloudAuth(mode) {
+  const url = $('#setCloudUrl').value.trim(), key = $('#setCloudKey').value.trim();
+  const email = $('#cloudEmail').value.trim(), pw = $('#cloudPassword').value;
+  if (!url || !key) { $('#cloudStatus').textContent = 'Paste the project URL and publishable key first.'; return; }
+  if (!email || pw.length < 6) { $('#cloudStatus').textContent = 'Enter your email and a password of at least 6 characters.'; return; }
+  state.settings.cloudUrl = url; state.settings.cloudKey = key;
+  await chrome.storage.local.set({ settings: state.settings });
+  const c = cloudClient();
+  $('#cloudStatus').textContent = mode === 'up' ? 'Creating your account…' : 'Signing in…';
+  try {
+    if (mode === 'up') {
+      const r = await c.signUp(email, pw);
+      if (r.confirm) { $('#cloudStatus').textContent = 'Check your email and click the confirm link (the page it opens may look broken, that is fine). Then come back and click Sign in.'; return; }
+    } else {
+      await c.signIn(email, pw);
+    }
+    $('#cloudPassword').value = '';
+    await send({ type: 'cloudSyncNow' });
+  } catch (e) {
+    $('#cloudStatus').textContent = /confirm/i.test(e.message) ? 'Confirm your email first (check your inbox), then Sign in.' : e.message;
+    return;
+  }
+  renderCloud();
+}
+
+// The phone asked this PC to import a car: done in a background tab, then it closes.
+async function runPhoneImport() {
+  const cmdId = params.get('cmd'), url = params.get('importUrl');
+  if (!cmdId || !url) return;
+  const c = cloudClient();
+  let status = 'done', result = '';
+  try {
+    const rec = await importOne(async () => {
+      const r = await send({ type: 'extractFromUrl', url });
+      if (!r || !r.ok) throw new Error(r ? r.error : 'no response');
+      return r.data;
+    }, 'Importing for your phone');
+    result = `Imported ${rec.fb.year} ${rec.fb.make} ${rec.fb.model}`;
+    await autoPostAfterImport([rec]);
+  } catch (e) {
+    status = 'failed'; result = e.message;
+  }
+  if (c) await c.db.update('commands', { id: cmdId }, { status, result, done_at: new Date().toISOString() }).catch(() => {});
+  await send({ type: 'cloudSyncNow' });
+  const me = await chrome.tabs.getCurrent();
+  if (me) chrome.tabs.remove(me.id);
+}
+
+// Photos added on the phone show up here from the cloud.
+const cloudUrls = new Map();
+async function cloudThumb(path) {
+  if (cloudUrls.has(path)) return cloudUrls.get(path);
+  const c = cloudClient();
+  if (!c) return '';
+  const u = URL.createObjectURL(await c.photos.download(path));
+  cloudUrls.set(path, u);
+  return u;
 }
 
 function openSettings() {
@@ -516,6 +595,7 @@ function openSettings() {
   $('#setProvider').dataset.prev = aiCfg().provider;
   showProvider();
   $('#updateStatus').textContent = '';
+  renderCloud();
   $('#settingsDlg').showModal();
 }
 
@@ -663,6 +743,11 @@ async function init() {
   renderList();
   const first = state.listings.find((l) => l.status !== 'posted') || state.listings[0];
   if (first) select(first.id);
+  $('#cloudSignInBtn').onclick = () => cloudAuth('in');
+  $('#cloudSignUpBtn').onclick = () => cloudAuth('up');
+  $('#cloudSignOutBtn').onclick = async () => { const c = cloudClient(); if (c) await c.signOut(); renderCloud(); };
+  $('#cloudSyncBtn').onclick = async () => { $('#cloudStatus').textContent = 'Syncing…'; await send({ type: 'cloudSyncNow' }); renderCloud(); };
+  if (params.get('cmd')) { runPhoneImport(); return; }
   if (params.get('updated')) setStatus(`Updated to version ${chrome.runtime.getManifest().version}.`, 'ok');
   else if (!aiReady()) setStatus('Tip: add a free Gemini API key in Settings so AI can write descriptions and sort photos.');
   // dashboard.js loads after this file; wait for it instead of racing it.
