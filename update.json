@@ -1,6 +1,6 @@
 {
-  "version": "1.8.0",
+  "version": "1.8.1",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/13d28e62eb1c963daec001779c563c786d297261/",
-  "notes": "auto renew listings, shorter certified warranty line"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/311492942efd3aba11b567cb2d4b3db466e1c8ba/",
+  "notes": "live status and switches for the phone app"
 }
