@@ -455,6 +455,9 @@
     else if (mk && mk.rare) close = `${m && m.level ? 'Low-mileage ' : ''}${plural} like this are getting harder to find!`;
     else if (mk && mk.demand === 'high') close = `${plural} are in high demand, so this one won't sit long.`;
     else if (!mk && rarity >= 2) close = manual ? `Manual ${plural} like this are getting hard to find!` : `${m && m.level ? 'Low-mileage ' : ''}${oneOwner ? 'one-owner ' : ''}${plural} like this are getting harder to find!`;
+    // Dat's rule: no "sells fast" / "hard to find" unless the miles are low for the year
+    // (a 2012 with only 50k, say). A popular model with normal miles isn't special.
+    if (!(m && m.level)) close = '';
     close = close.replace(/^(\w)/, (c) => c.toUpperCase());
 
     // The warranty line is the strongest finish; the "harder to find" line closes the rest.

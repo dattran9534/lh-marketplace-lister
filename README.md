@@ -2,6 +2,10 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.16.1
+
+- **No "sells fast" / "hard to find" unless the miles are low for the year** (a 2012 CR-V with 50k, say). A popular model with normal or high miles just ends with its features.
+
 ## What's new in 1.16
 
 - **Post does the whole thing.** Clicking **Post to Marketplace** (on the PC or the phone) now fills the form in a background tab and clicks Next and Publish by itself, then shows "Posted complete". If a must-have field (photos, price, colors…) doesn't fill, it stops and tells you which, so you can fix it and publish yourself. Turn off **When I click Post, fill in and publish by itself** in Settings to review before publishing. **Auto post** is still the separate switch that posts right after an import.
