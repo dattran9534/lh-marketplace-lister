@@ -2,6 +2,10 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.15
+
+- **"Hard to find" only when it's true.** Each import runs a market check: Gemini looks up comparable cars for sale near Seattle (Google Search) and how fast the model sells, and only calls a car rare or in high demand when it really is, with a closing line that says why. Most cars now end without a scarcity line. Without AI, the line only appears for genuinely unusual cars (super low miles for the year, one-owner low miles, manuals, sought-after trims like Si, Type R, TRD). The check is kept for two weeks per car.
+
 ## What's new in 1.14.1
 
 - **Dashboard layout fix.** Tall phone photos no longer stretch a car's box or push the page wider than the window; every photo fills the same 4:3 frame.

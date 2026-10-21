@@ -440,9 +440,21 @@
 
     // 4. Closing, specific to this car.
     const plural = /^[A-Z0-9-]+$/.test(modelWord) ? modelWord + 's' : /(s|x|z|ch|sh)$/i.test(modelWord) ? modelWord + 'es' : modelWord + 's';
-    const adj = [(cleanTitle || noAcc) && 'Clean', m && m.level && 'low-mileage', oneOwner && 'one-owner'].filter(Boolean);
-    const close = adj.length ? `${adj.join(' ').replace(/^Clean /, 'Clean, ')} ${plural} like this are getting harder to find!`.replace(/^(\w)/, (c) => c.toUpperCase())
-      : cert ? `Certified ${plural} like this don't sit long!` : `Come check it out before it's gone!`;
+    // Only say it's hard to find or in demand when that's actually true for this car:
+    // the AI's market check (raw.market) or a rarity score from the car's own facts.
+    const mk = raw.market || null;
+    const manual = /manual/i.test(raw.transmission || '');
+    let rarity = 0;
+    if (m && m.level === 'super') rarity += 2; else if (m && m.level === 'low' && age >= 6) rarity += 1;
+    if (oneOwner && m && m.level) rarity += 1;
+    if (manual && age <= 15) rarity += 1;
+    if (/\b(Type R|Si|TRD|Trail ?Hawk|Rubicon|Raptor|GT|Wilderness|Black Edition|TrailSport)\b/i.test(`${fb.model} ${raw.trim || ''}`)) rarity += 2;
+    let close = '';
+    if (mk && mk.closing) close = mk.closing;
+    else if (mk && mk.rare) close = `${m && m.level ? 'Low-mileage ' : ''}${plural} like this are getting harder to find!`;
+    else if (mk && mk.demand === 'high') close = `${plural} are in high demand, so this one won't sit long.`;
+    else if (!mk && rarity >= 2) close = manual ? `Manual ${plural} like this are getting hard to find!` : `${m && m.level ? 'Low-mileage ' : ''}${oneOwner ? 'one-owner ' : ''}${plural} like this are getting harder to find!`;
+    close = close.replace(/^(\w)/, (c) => c.toUpperCase());
 
     // The warranty line is the strongest finish; the "harder to find" line closes the rest.
     return [s.opening, [lead, history, care, featLine, cert, cert ? '' : close].filter(Boolean).join(' ')].filter(Boolean).join('\n');
