@@ -450,11 +450,14 @@
     if (oneOwner && m && m.level) rarity += 1;
     if (manual && age <= 15) rarity += 1;
     if (/\b(Type R|Si|TRD|Trail ?Hawk|Rubicon|Raptor|GT|Wilderness|Black Edition|TrailSport)\b/i.test(`${fb.model} ${raw.trim || ''}`)) rarity += 2;
+    // A popular model alone ("Odysseys are in high demand") is never a reason: only low miles
+    // that really stand out, or a market check that found it rare AND it has low miles.
     let close = '';
-    if (mk && mk.closing) close = mk.closing;
-    else if (mk && mk.rare) close = `${m && m.level ? 'Low-mileage ' : ''}${plural} like this are getting harder to find!`;
-    else if (mk && mk.demand === 'high') close = `${plural} are in high demand, so this one won't sit long.`;
-    else if (!mk && rarity >= 2) close = manual ? `Manual ${plural} like this are getting hard to find!` : `${m && m.level ? 'Low-mileage ' : ''}${oneOwner ? 'one-owner ' : ''}${plural} like this are getting harder to find!`;
+    const lowMilesLine = mk && mk.closing && /mile|\d/i.test(mk.closing);
+    if ((mk && mk.rare) || (m && m.level === 'super')) {
+      if (lowMilesLine) close = mk.closing;
+      else close = `${m && m.level ? 'Low-mileage ' : ''}${oneOwner ? 'one-owner ' : ''}${plural} like this are getting harder to find!`;
+    } else if (!mk && rarity >= 2) close = manual ? `Manual ${plural} like this are getting hard to find!` : `${m && m.level ? 'Low-mileage ' : ''}${oneOwner ? 'one-owner ' : ''}${plural} like this are getting harder to find!`;
     // Dat's rule: no "sells fast" / "hard to find" unless the miles are low for the year
     // (a 2012 with only 50k, say). A popular model with normal miles isn't special.
     if (!(m && m.level)) close = '';
