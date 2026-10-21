@@ -2,6 +2,11 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.17.1
+
+- **New posts show as Active.** A brand new listing can show a different word on Facebook's table for a while (for example "In review"); it now counts as Active instead of showing no status and no buttons. About a minute and a half after each post, the app quietly syncs in a background tab so the new listing shows up with its Facebook id.
+- **Page width fix.** Long messages or links can no longer push the dashboard wider than the window (which cut off the right side).
+
 ## What's new in 1.17
 
 - **Works with Facebook's new listings page.** Facebook moved "Your listings" to facebook.com/marketplace/seller/listings, a table with Active / Sold / Pending tabs. Sync now reads each tab (clicks come from the Clicks column), and Mark sold, Mark pending, Mark available, Delete, price changes and photo updates use the new "More actions" menu. The old page still works too.

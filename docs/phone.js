@@ -116,7 +116,7 @@
       const nowPosted = S.vehicles.filter((v) => v.status === 'posted' && S.statusSeen && S.statusSeen[v.id] && S.statusSeen[v.id] !== 'posted');
       S.statusSeen = Object.fromEntries(S.vehicles.map((v) => [v.id, v.status]));
       if (nowPosted.length) postedBanner(nowPosted.map((v) => `${v.fb.year} ${v.fb.make} ${v.fb.model}`));
-      S.fb = (fb && fb[0] && fb[0].listings) || [];
+      S.fb = ((fb && fb[0] && fb[0].listings) || []).map((f) => (f.status ? f : { ...f, status: 'Active' }));
       S.pcSeen = fb && fb[0] && fb[0].pc_seen_at ? new Date(fb[0].pc_seen_at) : null;
       S.commands = cmds || [];
       render();
