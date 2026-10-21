@@ -1,6 +1,6 @@
 {
-  "version": "1.14.0",
+  "version": "1.14.1",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/dd0595ffdb45fbb526d586c248bcd98272e77f8b/",
-  "notes": "posted complete confirmation, editor clears after posting"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/01df36c0d8cb5157a947e48263474a5641aada1b/",
+  "notes": "dashboard layout fix"
 }
