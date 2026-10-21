@@ -2,6 +2,11 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.14
+
+- **Posted complete.** When you click Publish on Facebook (or Auto post does), the app marks the car as posted and Facebook shows a "Posted complete" box with the car's name; the app shows the same message at the bottom right.
+- **The car gets out of your way.** After **Post to Marketplace**, the app goes back to the dashboard, and the editor's "Not posted" list no longer shows cars already sent to Facebook (they're under "Posted or sent").
+
 ## What's new in 1.13.1
 
 - **Description shape from Dat's Civic example.** "Recently arrived!" + the car, history (when CARFAX has it), "Comes equipped with ..." (the trim's best 3 or 4 features), then the warranty line. A Honda that just arrived (dealer page still shows the catalog picture), is up to 6 years old and under 80,000 miles gets "Will be reconditioned and Honda Certified Pre-Owned, with the Honda warranty up to 2031!" (7 years from the first sale date when CARFAX has it, otherwise from the model year). Already certified cars keep "Honda True Certified with warranty through 2031." Cars with neither still end with "... like this are getting harder to find!"
