@@ -1,6 +1,6 @@
 {
-  "version": "1.14.1",
+  "version": "1.15.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/01df36c0d8cb5157a947e48263474a5641aada1b/",
-  "notes": "dashboard layout fix"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/28bd61d7f96f99b69d7155f0accbf700e57cca01/",
+  "notes": "hard-to-find line only when a market check says the car is rare or in demand"
 }
