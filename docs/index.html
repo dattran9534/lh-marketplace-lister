@@ -100,6 +100,12 @@
       </div>
       <div id="dActions" class="actions"></div>
       <div id="dRequests" class="requests"></div>
+      <div id="dDetails" class="details" hidden>
+        <h3>Listing details</h3>
+        <div id="dGrid" class="dgrid"></div>
+        <label class="check-row"><input type="checkbox" data-f="cleanTitle"> This vehicle has a clean title</label>
+        <button id="dDetailsSave" class="secondary">Save details</button>
+      </div>
       <div id="dDescBox">
         <h3>Description</h3>
         <textarea id="dDesc" rows="7"></textarea>
@@ -142,6 +148,7 @@
   <div id="toast" class="toast" hidden></div>
 
   <script src="config.js"></script>
+  <script src="shared.js"></script>
   <script src="cloud.js"></script>
   <script src="phone.js"></script>
 </body>

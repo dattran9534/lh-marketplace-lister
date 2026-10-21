@@ -112,6 +112,10 @@
         cloud.db.select('commands', 'order=created_at.desc&limit=40'),
       ]);
       S.vehicles = (veh || []).map((r) => r.data).filter((d) => d && d.fb);
+      // A car that just went live on Facebook: say so.
+      const nowPosted = S.vehicles.filter((v) => v.status === 'posted' && S.statusSeen && S.statusSeen[v.id] && S.statusSeen[v.id] !== 'posted');
+      S.statusSeen = Object.fromEntries(S.vehicles.map((v) => [v.id, v.status]));
+      if (nowPosted.length) postedBanner(nowPosted.map((v) => `${v.fb.year} ${v.fb.make} ${v.fb.model}`));
       S.fb = (fb && fb[0] && fb[0].listings) || [];
       S.pcSeen = fb && fb[0] && fb[0].pc_seen_at ? new Date(fb[0].pc_seen_at) : null;
       S.commands = cmds || [];
@@ -125,6 +129,17 @@
       loading = false;
       $('#refreshBtn').classList.remove('spin');
     }
+  }
+
+  function postedBanner(names) {
+    let b = document.getElementById('postedBanner');
+    if (!b) { b = document.createElement('div'); b.id = 'postedBanner'; b.className = 'posted-banner'; document.body.appendChild(b); }
+    b.innerHTML = '<i class="pb-ck">✓</i><p class="pb-text"><b>Posted complete</b><em class="pb-sub"></em></p>';
+    b.querySelector('.pb-sub').textContent = `${names.join(', ')} ${names.length === 1 ? 'is' : 'are'} live on Facebook Marketplace.`;
+    b.hidden = false;
+    clearTimeout(b._h);
+    b._h = setTimeout(() => (b.hidden = true), 7000);
+    b.onclick = () => (b.hidden = true);
   }
 
   async function saveVehicle(v) {
@@ -465,13 +480,19 @@
     const stockNow = v && imgs.length > 0 && imgs.every((i) => STOCK.test(i.url || ''));
     if (stockNow) msg('#photoMsg', "This is the dealer's generic catalog picture, not the actual car. Tap Add photos to use your own.");
     $('#dDescBox').hidden = !v;
+    // Drafts can be edited here like on the PC; a live listing's price changes go through Facebook.
+    renderDetails(v, !!(v && !f && v.status !== 'posted'));
     if (v && document.activeElement !== $('#dDesc')) $('#dDesc').value = v.fb.description || '';
 
     const acts = $('#dActions');
     acts.innerHTML = '';
     const add = (label, cls, fn) => { const b = document.createElement('button'); b.className = cls; b.textContent = label; b.onclick = fn; acts.appendChild(b); };
     const busy = commandsFor(fresh).some(isPending);
-    if (v && !f && v.status !== 'posted') add('Post to Facebook', 'primary', () => request('post', { vehicleId: v.id, title: titleOf(fresh) }, 'Posting requested'));
+    if (v && !f && v.status !== 'posted') add('Post to Facebook', 'primary', async () => {
+      if (detailsDirty && confirm('Save your changes to the details first?')) await saveDetails();
+      closeSheet();
+      await request('post', { vehicleId: v.id, title: titleOf(fresh) }, 'Posting requested');
+    });
     if (v && v.raw && v.raw.sourceUrl) add('Refresh from dealer site', 'secondary', () => {
       if (confirm('Re-import this car from lynnwoodhonda.com? Price, miles, photos and CARFAX get updated. Your own description edits are kept.')) request('import', { url: v.raw.sourceUrl, title: titleOf(fresh), vehicleId: v.id }, 'Refresh requested');
     });
@@ -568,6 +589,75 @@
     }
   }
 
+  // ---------- listing details (same fields as the PC editor) ----------
+  const FBO = (window.LHShared && LHShared.FB) || {};
+  const FIELDS = [
+    ['year', 'Year', 'number'], ['make', 'Make', 'makes'], ['model', 'Model', 'text'],
+    ['mileage', 'Mileage', 'number'], ['price', 'Price ($)', 'number'], ['bodyStyle', 'Body style', 'bodyStyles'],
+    ['exteriorColor', 'Exterior color', 'colors'], ['interiorColor', 'Interior color', 'colors'], ['condition', 'Condition', 'conditions'],
+    ['fuelType', 'Fuel type', 'fuelTypes'], ['transmission', 'Transmission', 'transmissions'],
+  ];
+  let detailsKey = '', detailsDirty = false;
+  function buildDetails() {
+    const g = $('#dGrid');
+    if (g.children.length) return;
+    FIELDS.forEach(([k, label, type]) => {
+      const l = document.createElement('label');
+      l.className = 'dfield' + (k === 'model' ? ' wide' : '');
+      l.append(document.createTextNode(label));
+      let el;
+      if (FBO[type]) {
+        el = document.createElement('select');
+        el.appendChild(new Option('Choose…', ''));
+        FBO[type].forEach((o) => el.appendChild(new Option(o, o)));
+      } else {
+        el = document.createElement('input');
+        el.type = type === 'number' ? 'text' : 'text';
+        if (type === 'number') el.inputMode = 'numeric';
+      }
+      el.dataset.f = k;
+      el.oninput = el.onchange = () => (detailsDirty = true);
+      l.appendChild(el);
+      g.appendChild(l);
+    });
+    $('#dDetails [data-f="cleanTitle"]').onchange = () => (detailsDirty = true);
+  }
+  function renderDetails(v, show) {
+    $('#dDetails').hidden = !show;
+    if (!show) return;
+    buildDetails();
+    if (detailsKey === v.id && detailsDirty) return; // don't overwrite while you're typing
+    detailsKey = v.id; detailsDirty = false;
+    $$('#dDetails [data-f]').forEach((el) => {
+      const val = v.fb[el.dataset.f];
+      if (el.type === 'checkbox') el.checked = !!val;
+      else if (el.tagName === 'SELECT' && val && ![...el.options].some((o) => o.value === String(val))) { el.appendChild(new Option(val, val)); el.value = val; }
+      else el.value = val == null ? '' : val;
+    });
+  }
+  async function saveDetails() {
+    const v = S.open && S.open.v;
+    if (!v) return;
+    const btn = $('#dDetailsSave');
+    btn.disabled = true;
+    try {
+      $$('#dDetails [data-f]').forEach((el) => {
+        const k = el.dataset.f;
+        if (el.type === 'checkbox') v.fb[k] = el.checked;
+        else if (['year', 'mileage', 'price'].includes(k)) v.fb[k] = Number(String(el.value).replace(/[^\d]/g, '')) || '';
+        else v.fb[k] = el.value;
+      });
+      await saveVehicle(v);
+      detailsDirty = false;
+      toast('Details saved. The PC uses them when it posts.');
+      render();
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
   async function saveDesc() {
     const v = S.open && S.open.v;
     if (!v) return;
@@ -640,6 +730,7 @@
   $('#dPriceCancel').onclick = () => ($('#dPriceEdit').hidden = true);
   $('#dPriceSave').onclick = savePrice;
   $('#dDescSave').onclick = saveDesc;
+  $('#dDetailsSave').onclick = saveDetails;
   $('#swAutoPost').onchange = (e) => setSwitch('autoPost', e.target.checked, e.target);
   $('#swAutoRenew').onchange = (e) => setSwitch('autoRenew', e.target.checked, e.target);
   $('#editPhotosBtn').onclick = openPhotoEditor;
