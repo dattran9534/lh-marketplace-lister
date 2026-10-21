@@ -1,6 +1,6 @@
 {
-  "version": "1.17.0",
+  "version": "1.17.1",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/ae013e23791ccc93d42887104ef1210aa80a2580/",
-  "notes": "works with Facebook's new listings page (sync, sold, pending, delete, price)"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/db53f192f93208a216e72f31cbb2728effc9246c/",
+  "notes": "new posts show as Active, sync after posting, page width fix"
 }
