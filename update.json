@@ -1,6 +1,6 @@
 {
-  "version": "1.16.1",
+  "version": "1.16.2",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/58d893e869cad9eee05a596e447d2aca21dc7abc/",
-  "notes": "no sells-fast line unless the miles are low for the year"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/a2e07cc3ae353316ed66dffb05ee10876ece7f9d/",
+  "notes": "no generic high-demand line for popular models"
 }
