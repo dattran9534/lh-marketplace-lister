@@ -2,6 +2,10 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.13.1
+
+- **Description shape from Dat's Civic example.** "Recently arrived!" + the car, history (when CARFAX has it), "Comes equipped with ..." (the trim's best 3 or 4 features), then the warranty line. A Honda that just arrived (dealer page still shows the catalog picture), is up to 6 years old and under 80,000 miles gets "Will be reconditioned and Honda Certified Pre-Owned, with the Honda warranty up to 2031!" (7 years from the first sale date when CARFAX has it, otherwise from the model year). Already certified cars keep "Honda True Certified with warranty through 2031." Cars with neither still end with "... like this are getting harder to find!"
+
 ## What's new in 1.13
 
 - **Your phone photos before importing.** On the phone, **＋** now opens **Add a car**: paste the link, add your own photos, and choose **Use only my photos**. They upload first and the PC imports the car with them.
