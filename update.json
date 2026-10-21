@@ -1,6 +1,6 @@
 {
-  "version": "1.15.0",
+  "version": "1.16.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/28bd61d7f96f99b69d7155f0accbf700e57cca01/",
-  "notes": "hard-to-find line only when a market check says the car is rare or in demand"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/8f1d22adca761d39071c3f41b453cd87e772cb81/",
+  "notes": "Post to Marketplace now fills and publishes by itself"
 }
