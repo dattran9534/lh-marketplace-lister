@@ -1,6 +1,6 @@
 {
-  "version": "1.13.1",
+  "version": "1.14.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/43a882ddccabd0904b8e5a40801f0167557ad0ea/",
-  "notes": "description shape from your Civic example, will-be-certified warranty line"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/dd0595ffdb45fbb526d586c248bcd98272e77f8b/",
+  "notes": "posted complete confirmation, editor clears after posting"
 }
