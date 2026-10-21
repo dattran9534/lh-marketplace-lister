@@ -1,6 +1,6 @@
 {
-  "version": "1.13.0",
+  "version": "1.13.1",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/9d1df43b0e18ed880c940d84f5e7b7609549a34a/",
-  "notes": "phone photos before import, generic photo detection, correct drive type, feature-based descriptions"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/43a882ddccabd0904b8e5a40801f0167557ad0ea/",
+  "notes": "description shape from your Civic example, will-be-certified warranty line"
 }
