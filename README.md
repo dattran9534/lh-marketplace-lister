@@ -2,6 +2,10 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.14.1
+
+- **Dashboard layout fix.** Tall phone photos no longer stretch a car's box or push the page wider than the window; every photo fills the same 4:3 frame.
+
 ## What's new in 1.14
 
 - **Posted complete.** When you click Publish on Facebook (or Auto post does), the app marks the car as posted and Facebook shows a "Posted complete" box with the car's name; the app shows the same message at the bottom right.
