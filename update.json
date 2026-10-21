@@ -1,6 +1,6 @@
 {
-  "version": "1.16.2",
+  "version": "1.17.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/a2e07cc3ae353316ed66dffb05ee10876ece7f9d/",
-  "notes": "no generic high-demand line for popular models"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/ae013e23791ccc93d42887104ef1210aa80a2580/",
+  "notes": "works with Facebook's new listings page (sync, sold, pending, delete, price)"
 }
