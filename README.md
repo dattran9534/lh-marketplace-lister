@@ -2,6 +2,10 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.17
+
+- **Works with Facebook's new listings page.** Facebook moved "Your listings" to facebook.com/marketplace/seller/listings, a table with Active / Sold / Pending tabs. Sync now reads each tab (clicks come from the Clicks column), and Mark sold, Mark pending, Mark available, Delete, price changes and photo updates use the new "More actions" menu. The old page still works too.
+
 ## What's new in 1.16.2
 
 - **No more "Odysseys are in high demand".** A popular model is never a reason on its own. The closing line only appears for super low miles for the year, or a car the market check found rare that also has low miles, and it's about those miles.
