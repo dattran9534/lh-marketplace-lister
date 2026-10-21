@@ -1,6 +1,6 @@
 {
-  "version": "1.16.0",
+  "version": "1.16.1",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/8f1d22adca761d39071c3f41b453cd87e772cb81/",
-  "notes": "Post to Marketplace now fills and publishes by itself"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/58d893e869cad9eee05a596e447d2aca21dc7abc/",
+  "notes": "no sells-fast line unless the miles are low for the year"
 }
