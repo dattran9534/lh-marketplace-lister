@@ -2,6 +2,10 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.16
+
+- **Post does the whole thing.** Clicking **Post to Marketplace** (on the PC or the phone) now fills the form in a background tab and clicks Next and Publish by itself, then shows "Posted complete". If a must-have field (photos, price, colors…) doesn't fill, it stops and tells you which, so you can fix it and publish yourself. Turn off **When I click Post, fill in and publish by itself** in Settings to review before publishing. **Auto post** is still the separate switch that posts right after an import.
+
 ## What's new in 1.15
 
 - **"Hard to find" only when it's true.** Each import runs a market check: Gemini looks up comparable cars for sale near Seattle (Google Search) and how fast the model sells, and only calls a car rare or in high demand when it really is, with a closing line that says why. Most cars now end without a scarcity line. Without AI, the line only appears for genuinely unusual cars (super low miles for the year, one-owner low miles, manuals, sought-after trims like Si, Type R, TRD). The check is kept for two weeks per car.

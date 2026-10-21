@@ -20,6 +20,7 @@
     aiProvider: 'gemini',
     autoRenew: false,
     postsPerDay: 5,
+    publishOnPost: true,
     cloudUrl: 'https://auiprvcueqekuhuxepjp.supabase.co',
     cloudKey: 'sb_publishable_bgpi0s-mZeWhG6Mo3seTiA_Ug7eyR6o',
     geminiKey: '',
