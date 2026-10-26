@@ -1,6 +1,6 @@
 {
-  "version": "1.19.0",
+  "version": "1.19.1",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/bbc396c8cedf6879b3e412e6d7f0867537d8f09a/",
-  "notes": "list cars in your Facebook groups"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/0acfa3d112fa2ba5a9f6dc9230fc2713982375e5/",
+  "notes": "removes leftover duplicate listings after sync"
 }
