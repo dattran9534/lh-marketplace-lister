@@ -504,6 +504,37 @@
     return fb;
   }
 
+  // ---- dashboard order ----------------------------------------------------
+  // Live cars first (Active, then Pending), then ones waiting to post, then Sold.
+  // Inside each group: the chosen sort. Items are { l | v: app car, f: Facebook listing }.
+  const SORTS = { newest: 'Newest', oldest: 'Oldest', priceLow: 'Price: low to high', priceHigh: 'Price: high to low', clicks: 'Most clicks', milesLow: 'Lowest miles', yearNew: 'Year: newest' };
+  function sortItems(list, mode) {
+    const car = (it) => it.l || it.v || null;
+    const group = (it) => {
+      const st = it.f ? it.f.status || 'Active' : '';
+      if (st === 'Active') return 0;
+      if (st === 'Pending') return 1;
+      if (st === 'Sold') return 4;
+      const c = car(it);
+      return c && (c.status === 'posted' || c.status === 'opened') ? 2 : 3;
+    };
+    const price = (it) => Number((it.f && it.f.price) || (car(it) && car(it).fb.price) || 0);
+    const miles = (it) => Number((car(it) && car(it).fb.mileage) || 0) || Infinity;
+    const year = (it) => Number((car(it) && car(it).fb.year) || String((it.f && it.f.title) || '').slice(0, 4)) || 0;
+    const when = (it) => {
+      const c = car(it);
+      const d = it.f && it.f.listedOn ? daysSince(it.f.listedOn) : null;
+      return Math.max(d != null ? Date.now() - d * 86400000 : 0, (c && (c.postedAt || c.createdAt)) || 0);
+    };
+    const by = {
+      newest: (a, b) => when(b) - when(a), oldest: (a, b) => when(a) - when(b),
+      priceLow: (a, b) => price(a) - price(b), priceHigh: (a, b) => price(b) - price(a),
+      clicks: (a, b) => ((b.f && b.f.clicks) || 0) - ((a.f && a.f.clicks) || 0),
+      milesLow: (a, b) => miles(a) - miles(b), yearNew: (a, b) => year(b) - year(a),
+    }[mode] || ((a, b) => when(b) - when(a));
+    return list.map((it, i) => ({ it, i })).sort((x, y) => group(x.it) - group(y.it) || by(x.it, y.it) || x.i - y.i).map((x) => x.it);
+  }
+
   // ---- learning from Dat's own posts ------------------------------------
   // "10/19" -> days since that date (assumes the most recent such date).
   function daysSince(listedOn, now = new Date()) {
@@ -563,6 +594,6 @@
       .filter((f) => !fresh(f));
   }
 
-  global.LHShared = { willCertifyInfo, keyFeatures, mustKeep, standouts, milesInfo, learningSet, postsToLearnFrom, fbKey, daysSince, FB, DEFAULT_SETTINGS, toFacebook, describe, topFeatures, parseCarfax, factsFor, milesNote, firstSaleDate, certifiedInfo, certifiedSentence, mapColor, mapBody, mapFuel, mapMake, modelLine, EXT_RULES, INT_RULES };
+  global.LHShared = { sortItems, SORTS, willCertifyInfo, keyFeatures, mustKeep, standouts, milesInfo, learningSet, postsToLearnFrom, fbKey, daysSince, FB, DEFAULT_SETTINGS, toFacebook, describe, topFeatures, parseCarfax, factsFor, milesNote, firstSaleDate, certifiedInfo, certifiedSentence, mapColor, mapBody, mapFuel, mapMake, modelLine, EXT_RULES, INT_RULES };
   if (typeof module !== 'undefined') module.exports = global.LHShared;
 })(typeof window !== 'undefined' ? window : globalThis);

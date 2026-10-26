@@ -287,12 +287,12 @@
     }
 
     const q = S.search.toLowerCase();
-    const list = all.filter((it) => {
+    const list = LHShared.sortItems(all.filter((it) => {
       const st = statusOf(it);
       if (S.filter === 'notposted' && (it.f || (it.v && it.v.status === 'posted'))) return false;
       if (['Active', 'Pending', 'Sold'].includes(S.filter) && st !== S.filter) return false;
       return !q || titleOf(it).toLowerCase().includes(q);
-    });
+    }), S.sort);
     const grid = $('#grid');
     $('#empty').hidden = list.length > 0;
     const keep = new Set();
@@ -725,6 +725,10 @@
     }
   };
   $('#search').oninput = (e) => { S.search = e.target.value; render(); };
+  Object.entries(LHShared.SORTS).forEach(([k, label]) => $('#sort').appendChild(new Option(label, k)));
+  try { S.sort = localStorage.getItem('lhSort') || 'newest'; } catch (e) { S.sort = 'newest'; }
+  $('#sort').value = S.sort;
+  $('#sort').onchange = () => { S.sort = $('#sort').value; try { localStorage.setItem('lhSort', S.sort); } catch (e) {} render(); };
   $$('#chips .chip').forEach((b) => (b.onclick = () => { S.filter = b.dataset.f; $$('#chips .chip').forEach((x) => x.classList.toggle('active', x === b)); render(); }));
   $('#dPriceBtn').onclick = () => { $('#dPriceEdit').hidden = false; $('#dPriceInput').value = priceOf(S.open) || ''; $('#dPriceInput').focus(); };
   $('#dPriceCancel').onclick = () => ($('#dPriceEdit').hidden = true);

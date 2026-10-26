@@ -2,6 +2,11 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.18
+
+- **Mark sold that really sticks.** On Facebook's new listings page a car could vanish from the Active tab for a moment while Facebook asked a follow-up question ("Who did you sell to?"), and the app took that as done before the question was answered. Now it answers the question, waits, and checks the car is actually under the Sold (or Pending / Active) tab before saying Done. The app also records the new status right away.
+- **Sorting.** Dashboard and phone: live cars first (Active, then Pending), then cars waiting to post, then Sold. Inside each group, sort by Newest, Oldest, Price low/high, Most clicks, Lowest miles or Year. Your choice is remembered.
+
 ## What's new in 1.17.1
 
 - **New posts show as Active.** A brand new listing can show a different word on Facebook's table for a while (for example "In review"); it now counts as Active instead of showing no status and no buttons. About a minute and a half after each post, the app quietly syncs in a background tab so the new listing shows up with its Facebook id.

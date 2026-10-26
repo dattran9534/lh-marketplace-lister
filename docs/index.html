@@ -62,7 +62,10 @@
         <button data-f="Pending" class="chip">Pending</button>
         <button data-f="Sold" class="chip">Sold</button>
       </div>
-      <input id="search" type="search" placeholder="Search year, make, model">
+      <div class="search-row">
+        <input id="search" type="search" placeholder="Search year, make, model">
+        <select id="sort" aria-label="Sort"></select>
+      </div>
     </div>
     <div id="grid" class="grid"></div>
     <p id="empty" class="muted center" hidden>No cars yet. Import one on the PC, or tap ＋ to add one by link.</p>
