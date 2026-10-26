@@ -416,7 +416,7 @@
   const STATUS_TXT = { queued: 'Waiting for PC', running: 'PC is working on it', done: 'Done', failed: 'Did not work' };
   function describeCmd(c) {
     const p = c.payload || {};
-    const what = c.kind === 'price' ? `Price ${money(p.newPrice)}` : c.kind === 'action' ? ({ sold: 'Mark sold', pending: 'Mark pending', available: 'Mark available', delete: 'Delete' }[p.action] || p.action) : c.kind === 'photos' ? 'Update photos on Facebook' : c.kind === 'post' ? 'Post to Facebook' : c.kind === 'import' ? 'Import car' : c.kind === 'sync' ? 'Sync with Facebook' : c.kind === 'renew' ? 'Renew listings' : c.kind;
+    const what = c.kind === 'price' ? `Price ${money(p.newPrice)}` : c.kind === 'action' ? ({ sold: 'Mark sold', pending: 'Mark pending', available: 'Mark available', delete: 'Delete' }[p.action] || p.action) : c.kind === 'photos' ? 'Update photos on Facebook' : c.kind === 'post' ? 'Post to Facebook' : c.kind === 'import' ? 'Import car' : c.kind === 'sync' ? 'Sync with Facebook' : c.kind === 'renew' ? 'Renew listings' : c.kind === 'groups' ? 'List in groups' : c.kind;
     return `${what}${p.title ? ' · ' + p.title : ''}`;
   }
   function cmdRow(c) {
@@ -505,6 +505,7 @@
       });
       if (f.status === 'Active' || f.status === 'Pending') add('Mark sold', 'secondary', () => request('action', { ...base, action: 'sold' }, 'Mark sold requested'));
       if (f.status === 'Active') add('Mark pending', 'secondary', () => request('action', { ...base, action: 'pending' }, 'Mark pending requested'));
+      if (f.status === 'Active') add('List in groups', 'secondary', () => { if (confirm('List this car in the groups picked on the PC (Settings → Facebook groups)?')) request('groups', { title: f.title, price: f.price }, 'Group listing requested'); });
       if (f.status === 'Sold') add('Mark available', 'secondary', () => request('action', { ...base, action: 'available' }, 'Mark available requested'));
       if (f.id) add('Open on Facebook', 'link', () => window.open(`https://www.facebook.com/marketplace/item/${f.id}/`, '_blank'));
       add('Delete', 'danger', () => { if (confirm(`Delete "${f.title}" from Facebook? This can't be undone.`)) request('action', { ...base, action: 'delete' }, 'Delete requested'); });
