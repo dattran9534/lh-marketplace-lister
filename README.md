@@ -2,6 +2,10 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.19.1
+
+- **No more leftover duplicates.** When a sync reads the whole Active and Pending tabs on Facebook's new page, any old Active/Pending entry the app still had that isn't there anymore (a renamed title like "2011 Toyota Prius IV" → "2011 Toyota Prius Four IV", or a deleted listing) is removed instead of showing as a second box.
+
 ## What's new in 1.19
 
 - **Facebook groups.** Settings → **Facebook groups** → **Sync my groups from Facebook** reads the groups Facebook offers in "List in more places" (nothing is posted). Check the ones to use (up to 20; 3 to 5 local car buy/sell groups is safer) and turn on **After a car posts, also list it in the groups checked below**. A few minutes after each car is published, the app lists it in those groups, one car at a time. Live cars also get a **List in groups** button on the dashboard and the phone.
