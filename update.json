@@ -1,6 +1,6 @@
 {
-  "version": "1.17.1",
+  "version": "1.18.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/db53f192f93208a216e72f31cbb2728effc9246c/",
-  "notes": "new posts show as Active, sync after posting, page width fix"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/e2f6f132dbc9e382edb8f2153bb63da2a5d58c20/",
+  "notes": "mark sold verified, sorting (active first, then price, date, clicks)"
 }
