@@ -1,6 +1,6 @@
 {
-  "version": "1.18.0",
+  "version": "1.19.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/e2f6f132dbc9e382edb8f2153bb63da2a5d58c20/",
-  "notes": "mark sold verified, sorting (active first, then price, date, clicks)"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/bbc396c8cedf6879b3e412e6d7f0867537d8f09a/",
+  "notes": "list cars in your Facebook groups"
 }
