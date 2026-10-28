@@ -192,3 +192,7 @@ label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-w
 #dNotesBox { margin: 14px 0; }
 #dNotes, #addNotes { width: 100%; font-size: 16px; padding: 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--text); font-family: inherit; }
 #addSheet .field textarea { margin-top: 2px; }
+
+.d-groups { margin: 10px 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; font-size: 15px; }
+.d-groups ul { margin: 6px 0; padding-left: 18px; color: var(--muted); }
+.d-groups .link { padding: 4px 0; }

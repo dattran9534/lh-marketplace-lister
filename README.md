@@ -2,6 +2,10 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.24
+
+- **See which groups each post is in.** Boxes show "In N groups ▾"; click it for the list. **Check groups on Facebook** (dashboard bar) reads, for every active post, which groups Facebook shows it in, including ones you posted yourself (read only, nothing is posted). On the phone, each live car shows its groups with **Check groups on Facebook**.
+
 ## What's new in 1.23
 
 - **Things to mention.** A second box under the import links (and on the phone's Add a car screen): write what the description must feature, like "new timing belt done, no smoke, no pets". It goes right after the "Recently arrived!" line and history, and the AI has to keep every one of them (if its version drops one, the app uses the draft that has them). Each car keeps its notes: change them in the vehicle editor ("Things to mention", then Rewrite with AI) or on the phone (Save and rewrite description).

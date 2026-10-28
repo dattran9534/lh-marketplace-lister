@@ -416,7 +416,7 @@
   const STATUS_TXT = { queued: 'Waiting for PC', running: 'PC is working on it', done: 'Done', failed: 'Did not work' };
   function describeCmd(c) {
     const p = c.payload || {};
-    const what = c.kind === 'price' ? `Price ${money(p.newPrice)}` : c.kind === 'action' ? ({ sold: 'Mark sold', pending: 'Mark pending', available: 'Mark available', delete: 'Delete' }[p.action] || p.action) : c.kind === 'photos' ? 'Update photos on Facebook' : c.kind === 'post' ? 'Post to Facebook' : c.kind === 'import' ? 'Import car' : c.kind === 'sync' ? 'Sync with Facebook' : c.kind === 'renew' ? 'Renew listings' : c.kind === 'groups' ? 'List in groups' : c.kind === 'groupsAll' ? 'List all in groups' : c.kind === 'rewrite' ? 'Rewrite description' : c.kind === 'dealerPhotos' ? 'Use dealer website photos' : c.kind;
+    const what = c.kind === 'price' ? `Price ${money(p.newPrice)}` : c.kind === 'action' ? ({ sold: 'Mark sold', pending: 'Mark pending', available: 'Mark available', delete: 'Delete' }[p.action] || p.action) : c.kind === 'photos' ? 'Update photos on Facebook' : c.kind === 'post' ? 'Post to Facebook' : c.kind === 'import' ? 'Import car' : c.kind === 'sync' ? 'Sync with Facebook' : c.kind === 'renew' ? 'Renew listings' : c.kind === 'groups' ? 'List in groups' : c.kind === 'groupsAll' ? 'List all in groups' : c.kind === 'rewrite' ? 'Rewrite description' : c.kind === 'groupsCheck' ? 'Check groups' : c.kind === 'dealerPhotos' ? 'Use dealer website photos' : c.kind;
     return `${what}${p.title ? ' · ' + p.title : ''}`;
   }
   function cmdRow(c) {
@@ -486,6 +486,21 @@
     renderDetails(v, !!(v && !f && v.status !== 'posted'));
     if (v && document.activeElement !== $('#dDesc')) $('#dDesc').value = v.fb.description || '';
 
+    // Which groups this post is in.
+    const dg = $('#dGroups');
+    const gs = (f && f.groups) || [];
+    dg.hidden = !f || f.status === 'Sold';
+    if (!dg.hidden) {
+      dg.innerHTML = '';
+      const h = document.createElement('b');
+      h.textContent = gs.length ? `In ${gs.length} group${gs.length === 1 ? '' : 's'}` : 'Not in any groups yet';
+      dg.appendChild(h);
+      if (gs.length) { const ul = document.createElement('ul'); gs.forEach((g) => { const li = document.createElement('li'); li.textContent = g; ul.appendChild(li); }); dg.appendChild(ul); }
+      const chk = document.createElement('button');
+      chk.className = 'link'; chk.textContent = 'Check groups on Facebook';
+      chk.onclick = () => request('groupsCheck', { title: f.title, price: f.price }, 'Group check requested');
+      dg.appendChild(chk);
+    }
     const acts = $('#dActions');
     acts.innerHTML = '';
     const add = (label, cls, fn) => { const b = document.createElement('button'); b.className = cls; b.textContent = label; b.onclick = fn; acts.appendChild(b); };
