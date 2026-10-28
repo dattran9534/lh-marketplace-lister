@@ -166,13 +166,7 @@
   // ---------- matching cars to Facebook listings (same rules as the PC) ----------
   const norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const RANK = { Active: 0, Pending: 1, Sold: 2 };
-  function fbMatches(v, f) {
-    const t = (f.title || '').toLowerCase();
-    if (!t.startsWith(String(v.fb.year))) return false;
-    if (!norm(t).includes(norm(v.fb.make))) return false;
-    const m = norm((v.fb.model || '').split(' ')[0]);
-    return !!m && norm(t).includes(m);
-  }
+  const fbMatches = (v, f) => LHShared.sameCar(v, f);
   function items() {
     const fb = S.fb.map((f, i) => ({ ...f, key: 'fb' + i }));
     const used = new Set();

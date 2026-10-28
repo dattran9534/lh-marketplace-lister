@@ -2,6 +2,11 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.25.1
+
+- **Smarter "same car" check.** A car only counts as already on Facebook (and only gets linked to a Facebook post on the dashboard) when the year, make and model words agree: a 2020 Accord **Hybrid Base** is no longer mistaken for a 2020 Accord **Sedan LX** just because the price was close. A shorter Facebook title (like "2022 Honda HR-V" for an HR-V EX-L) still matches when the price is close.
+- **AI "high demand" errors** (Gemini busy) are retried a couple of times a few seconds apart before giving up.
+
 ## What's new in 1.25
 
 - **Edit live posts' descriptions.** Change "Things to mention" on a car that's already on Facebook, click **Rewrite with AI**, and it offers to put the new description on the live post. **Update description on Facebook** (vehicle editor) pushes the current text anytime. On the phone: **Save, rewrite and update on Facebook** (Things to mention) and **Save and update on Facebook** (under the description). Only the description changes; photos, price and the rest stay as they are.

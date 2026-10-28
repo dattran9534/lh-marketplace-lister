@@ -559,12 +559,26 @@
   }
 
   const n2 = (s) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  // Is this Facebook listing the same car? Year and make must match, and the model/trim words
+  // must agree: "Accord Hybrid Base" is NOT "Accord Sedan LX" (each has a word the other lacks).
+  // A shorter title is OK ("2022 Honda HR-V" for an "HR-V EX-L") when the price is close too.
+  const GENERIC = new Set(['base', 'sedan', 'coupe', 'hatchback', 'hatch', 'wagon', 'suv', 'van', 'minivan', 'truck', 'crew', 'cab', 'crewcab', '4d', '2d', '4dr', '2dr', 'car', 'awd', 'fwd', 'rwd', '2wd', '4wd', '4x4', 'cvt', 'automatic', 'manual', 'sport', 'utility', 'w', 'with', 'and', 'the']);
+  const words = (s) => String(s || '').toLowerCase().replace(/(\w)-(\w)/g, '$1$2').split(/[^a-z0-9]+/).filter((w) => w && !GENERIC.has(w));
   function sameCar(l, f) {
-    const t = (f.title || '').toLowerCase();
-    if (!t.startsWith(String(l.fb.year))) return false;
-    if (!n2(t).includes(n2(l.fb.make))) return false;
-    const m = n2((l.fb.model || '').split(' ')[0]);
-    return !!m && n2(t).includes(m);
+    const fb = (l && l.fb) || {};
+    const title = String((f && f.title) || '');
+    if (!fb.year || !title.startsWith(String(fb.year))) return false;
+    const make = words(fb.make);
+    let t = words(title.slice(String(fb.year).length));
+    if (!make.length || !make.every((w) => t.includes(w))) return false;
+    t = t.filter((w) => !make.includes(w));
+    const c = words(fb.model).filter((w) => !make.includes(w) && w !== String(fb.year));
+    if (!c.length || !t.length || c[0] !== t[0]) return false;
+    const cInT = c.every((w) => t.includes(w)), tInC = t.every((w) => c.includes(w));
+    if (cInT && tInC) return true;
+    if (!cInT && !tInC) return false;
+    const pa = Number(fb.price) || 0, pb = Number(f.price) || 0;
+    return !pa || !pb || Math.abs(pa - pb) < 3000;
   }
 
   const fbKey = (f) => `${f.title}|${f.listedOn}`;
@@ -606,6 +620,6 @@
       .filter((f) => !fresh(f));
   }
 
-  global.LHShared = { highlightList, sortItems, SORTS, willCertifyInfo, keyFeatures, mustKeep, standouts, milesInfo, learningSet, postsToLearnFrom, fbKey, daysSince, FB, DEFAULT_SETTINGS, toFacebook, describe, topFeatures, parseCarfax, factsFor, milesNote, firstSaleDate, certifiedInfo, certifiedSentence, mapColor, mapBody, mapFuel, mapMake, modelLine, EXT_RULES, INT_RULES };
+  global.LHShared = { sameCar, highlightList, sortItems, SORTS, willCertifyInfo, keyFeatures, mustKeep, standouts, milesInfo, learningSet, postsToLearnFrom, fbKey, daysSince, FB, DEFAULT_SETTINGS, toFacebook, describe, topFeatures, parseCarfax, factsFor, milesNote, firstSaleDate, certifiedInfo, certifiedSentence, mapColor, mapBody, mapFuel, mapMake, modelLine, EXT_RULES, INT_RULES };
   if (typeof module !== 'undefined') module.exports = global.LHShared;
 })(typeof window !== 'undefined' ? window : globalThis);
