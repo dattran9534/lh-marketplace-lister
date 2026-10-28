@@ -1,6 +1,6 @@
 {
-  "version": "1.20.0",
+  "version": "1.21.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/1c2ddbdbfe69a4c6891d89e82d30ad61066a6375/",
-  "notes": "Autopilot: no more stuck jobs, clear problem messages, fixes itself and waits for login"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/6574a3f573bef406f68b972d01aa3e9fba777daa/",
+  "notes": "swap a car's photos for the dealer website photos, on Facebook too"
 }
