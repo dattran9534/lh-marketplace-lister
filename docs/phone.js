@@ -416,7 +416,7 @@
   const STATUS_TXT = { queued: 'Waiting for PC', running: 'PC is working on it', done: 'Done', failed: 'Did not work' };
   function describeCmd(c) {
     const p = c.payload || {};
-    const what = c.kind === 'price' ? `Price ${money(p.newPrice)}` : c.kind === 'action' ? ({ sold: 'Mark sold', pending: 'Mark pending', available: 'Mark available', delete: 'Delete' }[p.action] || p.action) : c.kind === 'photos' ? 'Update photos on Facebook' : c.kind === 'post' ? 'Post to Facebook' : c.kind === 'import' ? 'Import car' : c.kind === 'sync' ? 'Sync with Facebook' : c.kind === 'renew' ? 'Renew listings' : c.kind === 'groups' ? 'List in groups' : c.kind === 'dealerPhotos' ? 'Use dealer website photos' : c.kind;
+    const what = c.kind === 'price' ? `Price ${money(p.newPrice)}` : c.kind === 'action' ? ({ sold: 'Mark sold', pending: 'Mark pending', available: 'Mark available', delete: 'Delete' }[p.action] || p.action) : c.kind === 'photos' ? 'Update photos on Facebook' : c.kind === 'post' ? 'Post to Facebook' : c.kind === 'import' ? 'Import car' : c.kind === 'sync' ? 'Sync with Facebook' : c.kind === 'renew' ? 'Renew listings' : c.kind === 'groups' ? 'List in groups' : c.kind === 'groupsAll' ? 'List all in groups' : c.kind === 'dealerPhotos' ? 'Use dealer website photos' : c.kind;
     return `${what}${p.title ? ' · ' + p.title : ''}`;
   }
   function cmdRow(c) {
@@ -508,7 +508,7 @@
       });
       if (f.status === 'Active' || f.status === 'Pending') add('Mark sold', 'secondary', () => request('action', { ...base, action: 'sold' }, 'Mark sold requested'));
       if (f.status === 'Active') add('Mark pending', 'secondary', () => request('action', { ...base, action: 'pending' }, 'Mark pending requested'));
-      if (f.status === 'Active') add('List in groups', 'secondary', () => { if (confirm('List this car in the groups picked on the PC (Settings → Facebook groups)?')) request('groups', { title: f.title, price: f.price }, 'Group listing requested'); });
+      if (f.status === 'Active') add(f.groups && f.groups.length ? `List in groups (in ${f.groups.length})` : 'List in groups', 'secondary', () => openGroups({ title: f.title, price: f.price, already: f.groups || [] }));
       if (f.status === 'Sold') add('Mark available', 'secondary', () => request('action', { ...base, action: 'available' }, 'Mark available requested'));
       if (f.id) add('Open on Facebook', 'link', () => window.open(`https://www.facebook.com/marketplace/item/${f.id}/`, '_blank'));
       add('Delete', 'danger', () => { if (confirm(`Delete "${f.title}" from Facebook? This can't be undone.`)) request('action', { ...base, action: 'delete' }, 'Delete requested'); });
@@ -682,6 +682,51 @@
   $('#signOutBtn').onclick = async () => { await cloud.signOut(); location.reload(); };
   $('#syncFbBtn').onclick = () => { $('#menu').hidden = true; request('sync', {}, 'Sync requested'); };
   $('#renewBtn').onclick = () => { $('#menu').hidden = true; request('renew', {}, 'Renew requested'); };
+  // ---------- groups: pick which groups a post goes to ----------
+  let gState = null;
+  async function openGroups(target) {
+    $('#gMsg').textContent = 'Loading your groups…';
+    $('#groupSheet').hidden = false;
+    let g = null;
+    try { g = await cloud.account.getKey('lhGroups'); } catch (e) {}
+    if (!g || !(g.list || []).length) { $('#gList').innerHTML = ''; $('#gGo').disabled = true; $('#gMsg').textContent = 'No groups yet. On the PC: Settings → Facebook groups → Sync my groups from Facebook. They show up here within a minute.'; return; }
+    const already = target.already || [];
+    gState = { g, target, chosen: new Set((g.chosen || []).filter((n) => !already.includes(n))), already };
+    $('#gTitle').textContent = target.all ? 'List all active posts in groups' : `List "${target.title}" in groups`;
+    $('#gSave').checked = false; $('#gFilter').value = ''; $('#gMsg').textContent = '';
+    drawGroups();
+  }
+  function drawGroups() {
+    const { g, chosen, already } = gState;
+    const q = $('#gFilter').value.toLowerCase();
+    const box = $('#gList');
+    box.innerHTML = '';
+    [...g.list].sort((a, b) => (chosen.has(b) - chosen.has(a)) || (already.includes(a) - already.includes(b))).filter((n) => !q || n.toLowerCase().includes(q)).forEach((n) => {
+      const l = document.createElement('label'); l.className = 'check-row g-row';
+      const c = document.createElement('input'); c.type = 'checkbox'; c.checked = chosen.has(n); c.disabled = already.includes(n);
+      c.onchange = () => { if (c.checked && chosen.size >= 20) { c.checked = false; return; } c.checked ? chosen.add(n) : chosen.delete(n); countGroups(); };
+      const t = document.createElement('span'); t.textContent = n + (already.includes(n) ? ' (already posted)' : '');
+      l.append(c, t); box.appendChild(l);
+    });
+    countGroups();
+  }
+  function countGroups() { const n = gState.chosen.size; $('#gGo').disabled = !n; $('#gGo').textContent = n ? `Post to ${n} group${n === 1 ? '' : 's'}` : 'Pick groups'; }
+  $('#gFilter').oninput = () => gState && drawGroups();
+  $('#closeGroups').onclick = () => ($('#groupSheet').hidden = true);
+  $('#groupSheet').onclick = (e) => { if (e.target.id === 'groupSheet') $('#groupSheet').hidden = true; };
+  $('#gGo').onclick = async () => {
+    const { g, target, chosen } = gState;
+    const groups = [...chosen];
+    $('#gGo').disabled = true;
+    try {
+      if ($('#gSave').checked) await cloud.account.setKey('lhGroups', { ...g, chosen: groups, at: Date.now() });
+      $('#groupSheet').hidden = true;
+      if (target.all) await request('groupsAll', { groups }, 'All active posts lined up for groups');
+      else await request('groups', { title: target.title, price: target.price, groups }, 'Group listing requested');
+    } catch (e) { $('#gMsg').textContent = e.message; $('#gGo').disabled = false; }
+  };
+  $('#groupsAllBtn').onclick = () => { $('#menu').hidden = true; openGroups({ all: true }); };
+
   // ---------- add a car (link + optional photos from this phone) ----------
   let addFiles = [];
   function renderAddThumbs() {

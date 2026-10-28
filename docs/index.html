@@ -135,6 +135,21 @@
     </div>
   </div>
 
+  <!-- Pick groups for a post -->
+  <div id="groupSheet" class="sheet" hidden>
+    <div class="sheet-card small-card" role="dialog" aria-modal="true" aria-labelledby="gTitle">
+      <div class="grab"></div>
+      <button id="closeGroups" class="icon close" aria-label="Close">✕</button>
+      <h2 id="gTitle">List in groups</h2>
+      <p class="muted small">Up to 20 per post. 3 to 5 local car buy/sell groups is safer than many.</p>
+      <input id="gFilter" type="search" placeholder="Filter groups">
+      <div id="gList" class="g-list"></div>
+      <label class="check-row"><input id="gSave" type="checkbox"> Make these my default groups</label>
+      <p id="gMsg" class="muted small"></p>
+      <button id="gGo" class="primary big">Post</button>
+    </div>
+  </div>
+
   <!-- Menu -->
   <div id="menu" class="sheet" hidden>
     <div class="sheet-card small-card">
@@ -142,6 +157,7 @@
       <p id="whoAmI" class="muted"></p>
       <button id="syncFbBtn" class="secondary big">Ask PC to sync with Facebook</button>
       <button id="renewBtn" class="secondary big">Ask PC to renew listings</button>
+      <button id="groupsAllBtn" class="secondary big">List all active posts in groups</button>
       <button id="installHelpBtn" class="secondary big">How to add to Home Screen</button>
       <button id="signOutBtn" class="link big">Sign out</button>
       <p id="installHelp" class="muted small" hidden>In Safari, tap the Share button (square with an arrow), then <b>Add to Home Screen</b>. It opens like an app after that.</p>

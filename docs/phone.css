@@ -179,3 +179,12 @@ label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-w
 .search-row { display: flex; gap: 8px; margin-top: 10px; }
 .search-row input { flex: 1; min-width: 0; margin: 0; }
 .search-row select { flex: none; max-width: 46%; font-size: 16px; padding: 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--text); }
+
+.g-list { max-height: 46vh; overflow: auto; margin: 8px 0; border: 1px solid var(--line); border-radius: 12px; padding: 2px 10px; }
+.g-row { flex-direction: row !important; justify-content: flex-start; text-align: left; color: var(--text); padding: 10px 0; border-bottom: 1px solid var(--line); margin: 0; }
+.g-row:last-child { border-bottom: 0; }
+.g-row input { width: 22px; height: 22px; flex: none; margin: 0; }
+#groupSheet .big { width: 100%; }
+#gFilter { width: 100%; }
+#groupSheet .check-row:not(.g-row) { flex-direction: row; justify-content: flex-start; text-align: left; color: var(--text); margin: 6px 0; }
+#groupSheet .check-row:not(.g-row) input { width: 22px; height: 22px; flex: none; margin: 0; }

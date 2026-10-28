@@ -2,6 +2,11 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.22
+
+- **Groups for posts already on Marketplace.** Every active post has **List in groups**: pick the groups for that post (your default groups are pre-checked; groups it's already in are shown and skipped), optionally save them as your defaults, and post. **List all in groups** (dashboard bar, and the phone menu) lines up every active post for your chosen groups, one car every 5 to 10 minutes. Boxes show "In N groups".
+- **Groups on the phone.** Your synced group list and default picks are shared with the phone (pick in either place; the newest pick wins).
+
 ## What's new in 1.21
 
 - **Use dealer website photos.** Once the dealer has real photos up, one tap swaps a car's photos (your own phone photos come off) for the dealer website photos, banner trimmed and sorted, and replaces the photos on the live Facebook post too. Dashboard box: **Use dealer photos**; vehicle editor: **Use dealer website photos**; phone: **Use dealer website photos** in the car's screen. If the dealer site still only has the generic catalog picture, it says so and changes nothing.

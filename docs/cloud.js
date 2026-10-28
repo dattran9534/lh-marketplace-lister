@@ -134,6 +134,18 @@
         const j = await r.json();
         return (j.user_metadata && j.user_metadata.lhSettings) || null;
       },
+      // Any other key on your account (Supabase merges top-level keys).
+      async getKey(k) {
+        const r = await fetch(`${url}/auth/v1/user`, { headers: { apikey: key, Authorization: `Bearer ${await token()}` } });
+        if (!r.ok) throw new Error(`Couldn't load your settings (${r.status})`);
+        const j = await r.json();
+        return (j.user_metadata && j.user_metadata[k]) || null;
+      },
+      async setKey(k, v) {
+        const r = await fetch(`${url}/auth/v1/user`, { method: 'PUT', headers: { ...baseHeaders(), Authorization: `Bearer ${await token()}` }, body: JSON.stringify({ data: { [k]: v } }) });
+        if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.msg || j.message || `Couldn't save (${r.status})`); }
+        return v;
+      },
       async set(lhSettings) {
         const r = await fetch(`${url}/auth/v1/user`, {
           method: 'PUT',
