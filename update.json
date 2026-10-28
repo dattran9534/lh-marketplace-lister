@@ -1,6 +1,6 @@
 {
-  "version": "1.24.0",
+  "version": "1.25.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/dd66a12bba70ce1d6288c44f7cf30f6c23231115/",
-  "notes": "things to mention box, and see which groups each post is in"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/d3aee2c221b7c7708e3373b13e9fa6cfa65d8b13/",
+  "notes": "edit the description on live Facebook posts with your things to mention"
 }
