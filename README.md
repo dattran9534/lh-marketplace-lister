@@ -2,6 +2,11 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.20 (Autopilot)
+
+- **No more stuck "Working on Facebook…".** Every Facebook job (mark sold / pending / available, delete, price, photos, groups, sync, renew) is watched: a closed tab, a login page, or a page that stops responding (no sign of life for 90 seconds) ends it right away with a clear message and **Try again** / **Open Facebook** buttons. The phone shows the same reasons.
+- **Autopilot (on by default, Settings → Autopilot).** A closed or frozen tab gets one fresh try by itself. If Facebook asks you to log in, the tab comes to the front, and the job carries on by itself the moment you're logged in (it presses Facebook's own one-tap "Continue as …" when Facebook offers it; your password is never stored or typed). A car's posting tab that gets closed by accident goes back in the posting line once; if Facebook asks you to log in mid-post, it goes back to the form and posts after you log in.
+
 ## What's new in 1.19.1
 
 - **No more leftover duplicates.** When a sync reads the whole Active and Pending tabs on Facebook's new page, any old Active/Pending entry the app still had that isn't there anymore (a renamed title like "2011 Toyota Prius IV" → "2011 Toyota Prius Four IV", or a deleted listing) is removed instead of showing as a second box.
