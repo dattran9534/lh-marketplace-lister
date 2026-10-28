@@ -109,6 +109,12 @@
         <label class="check-row"><input type="checkbox" data-f="cleanTitle"> This vehicle has a clean title</label>
         <button id="dDetailsSave" class="secondary">Save details</button>
       </div>
+      <div id="dNotesBox">
+        <label class="field">Things to mention in the description
+          <textarea id="dNotes" rows="2" placeholder="e.g. new timing belt done, no smoke, no pets"></textarea>
+        </label>
+        <button id="dNotesGo" class="secondary">Save and rewrite description</button>
+      </div>
       <div id="dDescBox">
         <h3>Description</h3>
         <textarea id="dDesc" rows="7"></textarea>
@@ -125,6 +131,9 @@
       <h2 id="addTitle">Add a car</h2>
       <label class="field">Link from lynnwoodhonda.com
         <input id="addUrl" type="url" inputmode="url" autocomplete="off" placeholder="https://www.lynnwoodhonda.com/viewdetails/...">
+      </label>
+      <label class="field">Things to mention (optional)
+        <textarea id="addNotes" rows="2" placeholder="e.g. new timing belt done, no smoke, no pets"></textarea>
       </label>
       <label class="btn secondary big"><input id="addCarPhotos" type="file" accept="image/*" multiple hidden>Add your photos (optional)</label>
       <div id="addThumbs" class="add-thumbs"></div>

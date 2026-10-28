@@ -416,7 +416,7 @@
   const STATUS_TXT = { queued: 'Waiting for PC', running: 'PC is working on it', done: 'Done', failed: 'Did not work' };
   function describeCmd(c) {
     const p = c.payload || {};
-    const what = c.kind === 'price' ? `Price ${money(p.newPrice)}` : c.kind === 'action' ? ({ sold: 'Mark sold', pending: 'Mark pending', available: 'Mark available', delete: 'Delete' }[p.action] || p.action) : c.kind === 'photos' ? 'Update photos on Facebook' : c.kind === 'post' ? 'Post to Facebook' : c.kind === 'import' ? 'Import car' : c.kind === 'sync' ? 'Sync with Facebook' : c.kind === 'renew' ? 'Renew listings' : c.kind === 'groups' ? 'List in groups' : c.kind === 'groupsAll' ? 'List all in groups' : c.kind === 'dealerPhotos' ? 'Use dealer website photos' : c.kind;
+    const what = c.kind === 'price' ? `Price ${money(p.newPrice)}` : c.kind === 'action' ? ({ sold: 'Mark sold', pending: 'Mark pending', available: 'Mark available', delete: 'Delete' }[p.action] || p.action) : c.kind === 'photos' ? 'Update photos on Facebook' : c.kind === 'post' ? 'Post to Facebook' : c.kind === 'import' ? 'Import car' : c.kind === 'sync' ? 'Sync with Facebook' : c.kind === 'renew' ? 'Renew listings' : c.kind === 'groups' ? 'List in groups' : c.kind === 'groupsAll' ? 'List all in groups' : c.kind === 'rewrite' ? 'Rewrite description' : c.kind === 'dealerPhotos' ? 'Use dealer website photos' : c.kind;
     return `${what}${p.title ? ' · ' + p.title : ''}`;
   }
   function cmdRow(c) {
@@ -480,6 +480,8 @@
     const stockNow = v && imgs.length > 0 && imgs.every((i) => STOCK.test(i.url || ''));
     if (stockNow) msg('#photoMsg', "This is the dealer's generic catalog picture, not the actual car. Tap Add photos to use your own.");
     $('#dDescBox').hidden = !v;
+    $('#dNotesBox').hidden = !v;
+    if (v && document.activeElement !== $('#dNotes') && $('#dNotes').dataset.key !== v.id) { $('#dNotes').value = (v.raw && v.raw.highlights) || ''; $('#dNotes').dataset.key = v.id; }
     // Drafts can be edited here like on the PC; a live listing's price changes go through Facebook.
     renderDetails(v, !!(v && !f && v.status !== 'posted'));
     if (v && document.activeElement !== $('#dDesc')) $('#dDesc').value = v.fb.description || '';
@@ -747,7 +749,7 @@
   }
   $('#addCarBtn').onclick = () => {
     addFiles = []; renderAddThumbs();
-    $('#addUrl').value = ''; $('#addMsg').textContent = ''; $('#addGo').disabled = false;
+    $('#addUrl').value = ''; $('#addNotes').value = ''; $('#addMsg').textContent = ''; $('#addGo').disabled = false;
     $('#addSheet').hidden = false;
   };
   $('#closeAdd').onclick = () => ($('#addSheet').hidden = true);
@@ -767,7 +769,7 @@
         photos.push(path);
       }
       $('#addSheet').hidden = true;
-      await request('import', { url, photos, onlyMine: photos.length > 0 && $('#onlyMine').checked }, photos.length ? `Import requested with ${photos.length} photo${photos.length === 1 ? '' : 's'}` : 'Import requested');
+      await request('import', { url, photos, onlyMine: photos.length > 0 && $('#onlyMine').checked, highlights: $('#addNotes').value.trim() }, photos.length ? `Import requested with ${photos.length} photo${photos.length === 1 ? '' : 's'}` : 'Import requested');
     } catch (e) {
       $('#addMsg').textContent = `Upload stopped: ${e.message}`;
       $('#addGo').disabled = false;
@@ -784,6 +786,15 @@
   $('#dPriceSave').onclick = savePrice;
   $('#dDescSave').onclick = saveDesc;
   $('#dDetailsSave').onclick = saveDetails;
+  $('#dNotesGo').onclick = async () => {
+    const v = S.open && S.open.v;
+    if (!v) return;
+    v.raw = v.raw || {};
+    v.raw.highlights = $('#dNotes').value.trim();
+    v.descBy = 'template'; // let the PC write it fresh with your notes
+    await saveVehicle(v);
+    await request('rewrite', { vehicleId: v.id, title: `${v.fb.year} ${v.fb.make} ${v.fb.model}` }, 'New description requested');
+  };
   $('#swAutoPost').onchange = (e) => setSwitch('autoPost', e.target.checked, e.target);
   $('#swAutoRenew').onchange = (e) => setSwitch('autoRenew', e.target.checked, e.target);
   $('#editPhotosBtn').onclick = openPhotoEditor;

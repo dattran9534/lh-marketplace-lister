@@ -465,7 +465,16 @@
     close = close.replace(/^(\w)/, (c) => c.toUpperCase());
 
     // The warranty line is the strongest finish; the "harder to find" line closes the rest.
-    return [s.opening, [lead, history, care, featLine, cert, cert ? '' : close].filter(Boolean).join(' ')].filter(Boolean).join('\n');
+    // Your own notes from the import box ("new timing belt done, no smoke, no pets").
+    const hl = highlightList(raw);
+    const hlLine = hl.length ? cap(joinList(hl.map((h, i) => (i ? h.charAt(0).toLowerCase() + h.slice(1) : h)))) + '.' : '';
+    return [s.opening, [lead, history, hlLine, care, featLine, cert, cert ? '' : close].filter(Boolean).join(' ')].filter(Boolean).join('\n');
+  }
+
+  // "new timing belt done, no smoke\nno pets" -> ['New timing belt done', 'No smoke', 'No pets']
+  function highlightList(raw) {
+    return String((raw && raw.highlights) || '').split(/[\n,;•]+|\s+-\s+/).map((x) => x.replace(/^[\s\-*•]+|[\s.!]+$/g, '').trim()).filter((x) => x.length > 1).slice(0, 8)
+      .map((x) => x.charAt(0).toUpperCase() + x.slice(1));
   }
 
   // The facts a description must keep (used to throw out AI text that drifted).
@@ -477,6 +486,8 @@
     if (cert) keep.push((cert.match(/\b20\d\d\b/) || [])[0] || 'Certified');
     const will = willCertifyInfo(raw, carfax);
     if (will) keep.push(will.until);
+    // Each of your notes must survive: its most telling word ("timing", "smoke", "pets").
+    highlightList(raw).forEach((h) => { const w = h.split(/\s+/).filter((x) => x.length > 3 && !/^(done|with|just|have|been|very|new|good|great|clean)$/i.test(x)).sort((a, b) => b.length - a.length)[0]; if (w) keep.push(w.toLowerCase()); });
     const hist = carfax ? carfax.positives || [] : [];
     if (hist.some((h) => /^One owner/.test(h))) keep.push('one owner');
     if (hist.some((h) => /^Clean title/.test(h))) keep.push('clean title');
@@ -595,6 +606,6 @@
       .filter((f) => !fresh(f));
   }
 
-  global.LHShared = { sortItems, SORTS, willCertifyInfo, keyFeatures, mustKeep, standouts, milesInfo, learningSet, postsToLearnFrom, fbKey, daysSince, FB, DEFAULT_SETTINGS, toFacebook, describe, topFeatures, parseCarfax, factsFor, milesNote, firstSaleDate, certifiedInfo, certifiedSentence, mapColor, mapBody, mapFuel, mapMake, modelLine, EXT_RULES, INT_RULES };
+  global.LHShared = { highlightList, sortItems, SORTS, willCertifyInfo, keyFeatures, mustKeep, standouts, milesInfo, learningSet, postsToLearnFrom, fbKey, daysSince, FB, DEFAULT_SETTINGS, toFacebook, describe, topFeatures, parseCarfax, factsFor, milesNote, firstSaleDate, certifiedInfo, certifiedSentence, mapColor, mapBody, mapFuel, mapMake, modelLine, EXT_RULES, INT_RULES };
   if (typeof module !== 'undefined') module.exports = global.LHShared;
 })(typeof window !== 'undefined' ? window : globalThis);

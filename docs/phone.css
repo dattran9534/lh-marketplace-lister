@@ -188,3 +188,7 @@ label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-w
 #gFilter { width: 100%; }
 #groupSheet .check-row:not(.g-row) { flex-direction: row; justify-content: flex-start; text-align: left; color: var(--text); margin: 6px 0; }
 #groupSheet .check-row:not(.g-row) input { width: 22px; height: 22px; flex: none; margin: 0; }
+
+#dNotesBox { margin: 14px 0; }
+#dNotes, #addNotes { width: 100%; font-size: 16px; padding: 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--text); font-family: inherit; }
+#addSheet .field textarea { margin-top: 2px; }
