@@ -1,6 +1,6 @@
 {
-  "version": "1.19.1",
+  "version": "1.20.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/0acfa3d112fa2ba5a9f6dc9230fc2713982375e5/",
-  "notes": "removes leftover duplicate listings after sync"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/1c2ddbdbfe69a4c6891d89e82d30ad61066a6375/",
+  "notes": "Autopilot: no more stuck jobs, clear problem messages, fixes itself and waits for login"
 }
