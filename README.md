@@ -2,6 +2,10 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.25.2
+
+- Every live post's box now shows its groups line ("In N groups ▾" or "Groups: none yet ▾"). Click it for the list, **Check on Facebook** for that one post, or **List in more groups**.
+
 ## What's new in 1.25.1
 
 - **Smarter "same car" check.** A car only counts as already on Facebook (and only gets linked to a Facebook post on the dashboard) when the year, make and model words agree: a 2020 Accord **Hybrid Base** is no longer mistaken for a 2020 Accord **Sedan LX** just because the price was close. A shorter Facebook title (like "2022 Honda HR-V" for an HR-V EX-L) still matches when the price is close.
