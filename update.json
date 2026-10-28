@@ -1,6 +1,6 @@
 {
-  "version": "1.21.0",
+  "version": "1.22.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/6574a3f573bef406f68b972d01aa3e9fba777daa/",
-  "notes": "swap a car's photos for the dealer website photos, on Facebook too"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/06ba8517c32e64dd97c39b27df1366409bb1592f/",
+  "notes": "list posts already on Marketplace in your groups (pick per post, or list all)"
 }
