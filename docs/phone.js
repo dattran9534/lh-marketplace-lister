@@ -416,7 +416,7 @@
   const STATUS_TXT = { queued: 'Waiting for PC', running: 'PC is working on it', done: 'Done', failed: 'Did not work' };
   function describeCmd(c) {
     const p = c.payload || {};
-    const what = c.kind === 'price' ? `Price ${money(p.newPrice)}` : c.kind === 'action' ? ({ sold: 'Mark sold', pending: 'Mark pending', available: 'Mark available', delete: 'Delete' }[p.action] || p.action) : c.kind === 'photos' ? 'Update photos on Facebook' : c.kind === 'post' ? 'Post to Facebook' : c.kind === 'import' ? 'Import car' : c.kind === 'sync' ? 'Sync with Facebook' : c.kind === 'renew' ? 'Renew listings' : c.kind === 'groups' ? 'List in groups' : c.kind;
+    const what = c.kind === 'price' ? `Price ${money(p.newPrice)}` : c.kind === 'action' ? ({ sold: 'Mark sold', pending: 'Mark pending', available: 'Mark available', delete: 'Delete' }[p.action] || p.action) : c.kind === 'photos' ? 'Update photos on Facebook' : c.kind === 'post' ? 'Post to Facebook' : c.kind === 'import' ? 'Import car' : c.kind === 'sync' ? 'Sync with Facebook' : c.kind === 'renew' ? 'Renew listings' : c.kind === 'groups' ? 'List in groups' : c.kind === 'dealerPhotos' ? 'Use dealer website photos' : c.kind;
     return `${what}${p.title ? ' · ' + p.title : ''}`;
   }
   function cmdRow(c) {
@@ -492,6 +492,9 @@
       if (detailsDirty && confirm('Save your changes to the details first?')) await saveDetails();
       closeSheet();
       await request('post', { vehicleId: v.id, title: titleOf(fresh) }, 'Posting requested');
+    });
+    if (v && v.raw && v.raw.sourceUrl && (!f || f.status !== 'Sold')) add('Use dealer website photos', 'secondary', () => {
+      if (confirm(`Replace this car's photos with the photos on the dealer website?${f ? '\n\nThe photos on the live Facebook post get replaced too.' : ''}\n\nYour own photos are taken off this car.`)) request('dealerPhotos', { vehicleId: v.id, title: titleOf(fresh) }, 'Dealer photos requested');
     });
     if (v && v.raw && v.raw.sourceUrl) add('Refresh from dealer site', 'secondary', () => {
       if (confirm('Re-import this car from lynnwoodhonda.com? Price, miles, photos and CARFAX get updated. Your own description edits are kept.')) request('import', { url: v.raw.sourceUrl, title: titleOf(fresh), vehicleId: v.id }, 'Refresh requested');
