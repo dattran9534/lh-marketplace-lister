@@ -416,7 +416,7 @@
   const STATUS_TXT = { queued: 'Waiting for PC', running: 'PC is working on it', done: 'Done', failed: 'Did not work' };
   function describeCmd(c) {
     const p = c.payload || {};
-    const what = c.kind === 'price' ? `Price ${money(p.newPrice)}` : c.kind === 'action' ? ({ sold: 'Mark sold', pending: 'Mark pending', available: 'Mark available', delete: 'Delete' }[p.action] || p.action) : c.kind === 'photos' ? 'Update photos on Facebook' : c.kind === 'post' ? 'Post to Facebook' : c.kind === 'import' ? 'Import car' : c.kind === 'sync' ? 'Sync with Facebook' : c.kind === 'renew' ? 'Renew listings' : c.kind === 'groups' ? 'List in groups' : c.kind === 'groupsAll' ? 'List all in groups' : c.kind === 'rewrite' ? 'Rewrite description' : c.kind === 'groupsCheck' ? 'Check groups' : c.kind === 'dealerPhotos' ? 'Use dealer website photos' : c.kind;
+    const what = c.kind === 'price' ? `Price ${money(p.newPrice)}` : c.kind === 'action' ? ({ sold: 'Mark sold', pending: 'Mark pending', available: 'Mark available', delete: 'Delete' }[p.action] || p.action) : c.kind === 'photos' ? 'Update photos on Facebook' : c.kind === 'post' ? 'Post to Facebook' : c.kind === 'import' ? 'Import car' : c.kind === 'sync' ? 'Sync with Facebook' : c.kind === 'renew' ? 'Renew listings' : c.kind === 'groups' ? 'List in groups' : c.kind === 'groupsAll' ? 'List all in groups' : c.kind === 'rewrite' ? (p.pushFb ? 'Rewrite description (and Facebook)' : 'Rewrite description') : c.kind === 'groupsCheck' ? 'Check groups' : c.kind === 'desc' ? 'Update description on Facebook' : c.kind === 'dealerPhotos' ? 'Use dealer website photos' : c.kind;
     return `${what}${p.title ? ' · ' + p.title : ''}`;
   }
   function cmdRow(c) {
@@ -482,6 +482,9 @@
     $('#dDescBox').hidden = !v;
     $('#dNotesBox').hidden = !v;
     if (v && document.activeElement !== $('#dNotes') && $('#dNotes').dataset.key !== v.id) { $('#dNotes').value = (v.raw && v.raw.highlights) || ''; $('#dNotes').dataset.key = v.id; }
+    const liveNow = !!(f && f.status !== 'Sold');
+    $('#dNotesGo').textContent = liveNow ? 'Save, rewrite and update on Facebook' : 'Save and rewrite description';
+    $('#dDescFb').hidden = !(v && liveNow);
     // Drafts can be edited here like on the PC; a live listing's price changes go through Facebook.
     renderDetails(v, !!(v && !f && v.status !== 'posted'));
     if (v && document.activeElement !== $('#dDesc')) $('#dDesc').value = v.fb.description || '';
@@ -801,6 +804,14 @@
   $('#dPriceSave').onclick = savePrice;
   $('#dDescSave').onclick = saveDesc;
   $('#dDetailsSave').onclick = saveDetails;
+  $('#dDescFb').onclick = async () => {
+    const { v, f } = S.open || {};
+    if (!v || !f) return;
+    if (!confirm('Put this description on the live Facebook post?')) return;
+    v.fb.description = $('#dDesc').value; v.descBy = 'edited';
+    await saveVehicle(v);
+    await request('desc', { vehicleId: v.id, title: f.title, price: f.price, fbId: f.id || '' }, 'Description update requested');
+  };
   $('#dNotesGo').onclick = async () => {
     const v = S.open && S.open.v;
     if (!v) return;
@@ -808,7 +819,9 @@
     v.raw.highlights = $('#dNotes').value.trim();
     v.descBy = 'template'; // let the PC write it fresh with your notes
     await saveVehicle(v);
-    await request('rewrite', { vehicleId: v.id, title: `${v.fb.year} ${v.fb.make} ${v.fb.model}` }, 'New description requested');
+    const f = S.open && S.open.f;
+    const live = !!(f && f.status !== 'Sold');
+    await request('rewrite', { vehicleId: v.id, title: `${v.fb.year} ${v.fb.make} ${v.fb.model}`, pushFb: live }, live ? 'New description requested (Facebook too)' : 'New description requested');
   };
   $('#swAutoPost').onchange = (e) => setSwitch('autoPost', e.target.checked, e.target);
   $('#swAutoRenew').onchange = (e) => setSwitch('autoRenew', e.target.checked, e.target);

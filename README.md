@@ -2,6 +2,10 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.25
+
+- **Edit live posts' descriptions.** Change "Things to mention" on a car that's already on Facebook, click **Rewrite with AI**, and it offers to put the new description on the live post. **Update description on Facebook** (vehicle editor) pushes the current text anytime. On the phone: **Save, rewrite and update on Facebook** (Things to mention) and **Save and update on Facebook** (under the description). Only the description changes; photos, price and the rest stay as they are.
+
 ## What's new in 1.24
 
 - **See which groups each post is in.** Boxes show "In N groups ▾"; click it for the list. **Check groups on Facebook** (dashboard bar) reads, for every active post, which groups Facebook shows it in, including ones you posted yourself (read only, nothing is posted). On the phone, each live car shows its groups with **Check groups on Facebook**.

@@ -1,5 +1,5 @@
 // Opens offline and stays fresh: always try the network first, fall back to the saved copy.
-const CACHE = 'lh-lister-v16';
+const CACHE = 'lh-lister-v17';
 const SHELL = ['./', 'index.html', 'phone.css', 'phone.js', 'cloud.js', 'shared.js', 'config.js', 'manifest.webmanifest', 'icons/icon-180.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(self.clients.claim()); });
