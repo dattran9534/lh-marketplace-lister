@@ -1,6 +1,6 @@
 {
-  "version": "1.25.0",
+  "version": "1.25.1",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/d3aee2c221b7c7708e3373b13e9fa6cfa65d8b13/",
-  "notes": "edit the description on live Facebook posts with your things to mention"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/c8c407e792426f1b073944dc49891995db9790e1/",
+  "notes": "no more false 'already on Facebook' for different trims; retries busy AI"
 }
