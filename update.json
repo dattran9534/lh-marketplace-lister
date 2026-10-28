@@ -1,6 +1,6 @@
 {
-  "version": "1.25.1",
+  "version": "1.25.2",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/c8c407e792426f1b073944dc49891995db9790e1/",
-  "notes": "no more false 'already on Facebook' for different trims; retries busy AI"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/0a8d5a69bfaeb645d628c2cb8290ebda3852bf25/",
+  "notes": "groups line on every live post"
 }
