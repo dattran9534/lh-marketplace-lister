@@ -1,6 +1,6 @@
 {
-  "version": "1.25.2",
+  "version": "1.27.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/0a8d5a69bfaeb645d628c2cb8290ebda3852bf25/",
-  "notes": "groups line on every live post"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/c087cd522e7937fc8e6bbcbbfb572a7d96d9f3fb/",
+  "notes": "works in a hidden window (no extra tabs) and keeps in sync with Facebook"
 }
