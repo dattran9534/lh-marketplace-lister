@@ -2,6 +2,11 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.27
+
+- **No more Facebook tabs next to yours.** Everything the app does on Facebook, the dealer site and CARFAX now happens in one hidden (minimized) browser window. If Facebook needs you (log in, a security check), that window comes to the front, then hides again. Prefer something else? Settings → **Where the app works**: hidden window, a collapsed "LH working" tab group, or regular background tabs. (Posting in "review before publishing" mode still opens a normal tab so you can review it.)
+- **Live sync.** The app now keeps itself in step with your Facebook listings: every 15 minutes between 8am and 9pm (Settings → **Keep in sync with Facebook**: 10, 15, 30, 60 minutes or off), plus a catch-up when you open the app and right after anything you change. A sale, price change or new post you make on Facebook itself shows up in the app and on the phone within that time.
+
 ## What's new in 1.25.2
 
 - Every live post's box now shows its groups line ("In N groups ▾" or "Groups: none yet ▾"). Click it for the list, **Check on Facebook** for that one post, or **List in more groups**.
