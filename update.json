@@ -1,6 +1,6 @@
 {
-  "version": "1.27.0",
+  "version": "1.27.1",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/c087cd522e7937fc8e6bbcbbfb572a7d96d9f3fb/",
-  "notes": "works in a hidden window (no extra tabs) and keeps in sync with Facebook"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/817521deb149ddc9ae4b2e011893d4b1fbad3caf/",
+  "notes": "fixes blank phone photos after Sort with AI (Recover photos), front of the car first"
 }
