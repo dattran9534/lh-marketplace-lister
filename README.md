@@ -2,6 +2,11 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.27.1
+
+- **Fixed: "Sort with AI" blanked phone photos.** Sorting dropped the link to photos that came from the phone (they live in your cloud storage), so they showed as empty boxes. Sorting now keeps them, and a car with blank photos shows **Recover photos**, which finds them again (from the import request that brought them in and the car's photo folder) and sorts them.
+- **Front of the car first.** The AI now also tells which way each outside photo faces. The first photo is always a front view (front three-quarter preferred, never the back if a front shot exists), and the outside photos follow in walk-around order: front three-quarter, front, side, rear three-quarter, rear; then details, then interior.
+
 ## What's new in 1.27
 
 - **No more Facebook tabs next to yours.** Everything the app does on Facebook, the dealer site and CARFAX now happens in one hidden (minimized) browser window. If Facebook needs you (log in, a security check), that window comes to the front, then hides again. Prefer something else? Settings → **Where the app works**: hidden window, a collapsed "LH working" tab group, or regular background tabs. (Posting in "review before publishing" mode still opens a normal tab so you can review it.)

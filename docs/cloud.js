@@ -115,6 +115,17 @@
         if (!r.ok) throw new Error(`Photo download failed (${r.status})`);
         return r.blob();
       },
+      // Files in a folder of your photo storage (full paths).
+      async list(prefix) {
+        const r = await fetch(`${url}/storage/v1/object/list/photos`, {
+          method: 'POST',
+          headers: { ...baseHeaders(), Authorization: `Bearer ${await token()}` },
+          body: JSON.stringify({ prefix: prefix.replace(/\/?$/, '/'), limit: 200, sortBy: { column: 'created_at', order: 'asc' } }),
+        });
+        if (!r.ok) return [];
+        const j = await r.json().catch(() => []);
+        return (j || []).filter((o) => o.id && /\.(jpe?g|png|webp|heic)$/i.test(o.name)).map((o) => prefix.replace(/\/?$/, '/') + o.name);
+      },
       async remove(paths) {
         if (!paths.length) return;
         await fetch(`${url}/storage/v1/object/photos`, {
