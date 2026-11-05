@@ -296,7 +296,8 @@
       const pending = commandsFor(it).find(isPending);
       const first = it.v ? (it.v.images || []).find((x) => x.on) || (it.v.images || [])[0] : null;
       const imgKey = first ? imgKeyOf(first) : (it.f && it.f.photo) || '';
-      const meta = [it.v && it.v.fb.mileage ? Number(it.v.fb.mileage).toLocaleString() + ' mi' : '', it.f && it.f.status !== 'Sold' ? `${it.f.clicks || 0} clicks` : ''].filter(Boolean).join(' · ');
+      const perDay = (f) => (f.cpd != null && f.days >= 2 ? ` · ${f.cpd}/day${f.trend === 'up' ? ' ↑' : f.trend === 'down' ? ' ↓' : ''}${f.slow ? ' · Slow' : ''}` : '');
+      const meta = [it.v && it.v.fb.mileage ? Number(it.v.fb.mileage).toLocaleString() + ' mi' : '', it.f && it.f.status !== 'Sold' ? `${it.f.clicks || 0} clicks${perDay(it.f)}` : '', it.v && it.v.dealerGone && it.f && it.f.status !== 'Sold' ? 'Not on dealer site' : ''].filter(Boolean).join(' · ');
       const busyTxt = pending ? (pending.status === 'running' ? 'PC is working…' : 'Waiting for PC') : '';
       const sig = JSON.stringify([st, busyTxt, titleOf(it), priceOf(it), meta]);
       let c = cards.get(it.key);
@@ -410,7 +411,7 @@
   const STATUS_TXT = { queued: 'Waiting for PC', running: 'PC is working on it', done: 'Done', failed: 'Did not work' };
   function describeCmd(c) {
     const p = c.payload || {};
-    const what = c.kind === 'price' ? `Price ${money(p.newPrice)}` : c.kind === 'action' ? ({ sold: 'Mark sold', pending: 'Mark pending', available: 'Mark available', delete: 'Delete' }[p.action] || p.action) : c.kind === 'photos' ? 'Update photos on Facebook' : c.kind === 'post' ? 'Post to Facebook' : c.kind === 'import' ? 'Import car' : c.kind === 'sync' ? 'Sync with Facebook' : c.kind === 'renew' ? 'Renew listings' : c.kind === 'groups' ? 'List in groups' : c.kind === 'groupsAll' ? 'List all in groups' : c.kind === 'rewrite' ? (p.pushFb ? 'Rewrite description (and Facebook)' : 'Rewrite description') : c.kind === 'groupsCheck' ? 'Check groups' : c.kind === 'desc' ? 'Update description on Facebook' : c.kind === 'dealerPhotos' ? 'Use dealer website photos' : c.kind;
+    const what = c.kind === 'price' ? `Price ${money(p.newPrice)}` : c.kind === 'action' ? ({ sold: 'Mark sold', pending: 'Mark pending', available: 'Mark available', delete: 'Delete' }[p.action] || p.action) : c.kind === 'photos' ? 'Update photos on Facebook' : c.kind === 'post' ? 'Post to Facebook' : c.kind === 'import' ? 'Import car' : c.kind === 'sync' ? 'Sync with Facebook' : c.kind === 'renew' ? 'Renew listings' : c.kind === 'groups' ? 'List in groups' : c.kind === 'groupsAll' ? 'List all in groups' : c.kind === 'rewrite' ? (p.pushFb ? 'Rewrite description (and Facebook)' : 'Rewrite description') : c.kind === 'groupsCheck' ? 'Check groups' : c.kind === 'desc' ? 'Update description on Facebook' : c.kind === 'relist' ? 'Re-list fresh' : c.kind === 'heroTest' ? 'New first photo' : c.kind === 'dealerPhotos' ? 'Use dealer website photos' : c.kind;
     return `${what}${p.title ? ' · ' + p.title : ''}`;
   }
   function cmdRow(c) {
@@ -458,7 +459,7 @@
     S.open = fresh;
     const { v, f } = fresh;
     $('#dTitle').textContent = titleOf(fresh);
-    $('#dMeta').textContent = [statusOf(fresh), v && v.fb.mileage ? Number(v.fb.mileage).toLocaleString() + ' mi' : '', v && v.raw && v.raw.stock ? 'Stock ' + v.raw.stock : '', f && f.listedOn ? 'Listed ' + f.listedOn : '', f && f.status !== 'Sold' ? `${f.clicks || 0} clicks` : ''].filter(Boolean).join(' · ');
+    $('#dMeta').textContent = [statusOf(fresh), v && v.fb.mileage ? Number(v.fb.mileage).toLocaleString() + ' mi' : '', v && v.raw && v.raw.stock ? 'Stock ' + v.raw.stock : '', f && f.listedOn ? 'Listed ' + f.listedOn : '', f && f.status !== 'Sold' ? `${f.clicks || 0} clicks` + (f.cpd != null && f.days >= 2 ? ` (${f.cpd}/day${f.trend === 'up' ? ' ↑' : f.trend === 'down' ? ' ↓' : ''})` : '') : ''].filter(Boolean).join(' · ');
     $('#dPrice').textContent = money(priceOf(fresh));
 
     const ph = $('#dPhotos');
@@ -482,6 +483,26 @@
     // Drafts can be edited here like on the PC; a live listing's price changes go through Facebook.
     renderDetails(v, !!(v && !f && v.status !== 'posted'));
     if (v && document.activeElement !== $('#dDesc')) $('#dDesc').value = v.fb.description || '';
+
+    // A slow post: one-tap fixes. A car gone from the dealer site: offer Mark sold.
+    const fx = $('#dFixes');
+    fx.innerHTML = '';
+    if (f && f.status === 'Active' && (f.slow || (v && v.dealerGone))) {
+      const h = document.createElement('b');
+      h.textContent = v && v.dealerGone ? 'Not on the dealer website anymore. Sold?' : `Slow: ${f.cpd}/day after ${f.days} days, fewer than your other cars. Try one:`;
+      fx.appendChild(h);
+      const row = document.createElement('div'); row.className = 'fix-row';
+      const b = (t, fn) => { const x = document.createElement('button'); x.className = 'secondary'; x.textContent = t; x.onclick = fn; row.appendChild(x); };
+      if (v && v.dealerGone) b('Mark sold', () => request('action', { title: f.title, price: f.price, action: 'sold' }, 'Mark sold requested'));
+      else {
+        if (v) b('New first photo', () => request('heroTest', { vehicleId: v.id, title: f.title }, 'New first photo requested'));
+        if (v) b('Things to mention', () => { $('#dNotes').focus(); $('#dNotes').scrollIntoView({ block: 'center' }); });
+        b('List in groups', () => openGroups({ title: f.title, price: f.price, already: f.groups || [] }));
+        if (v && f.days >= 21 && !(v.relistedAt && Date.now() - v.relistedAt < 30 * 86400000)) b('Re-list fresh', () => { if (confirm('Take this post down and post the car again as new? Its saves and messages stay with the old post.')) request('relist', { vehicleId: v.id, title: f.title }, 'Re-list requested'); });
+      }
+      fx.appendChild(row);
+    }
+    fx.hidden = !fx.children.length;
 
     // Which groups this post is in.
     const dg = $('#dGroups');

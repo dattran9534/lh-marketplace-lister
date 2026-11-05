@@ -2,6 +2,14 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.28 (more views)
+
+- **Performance tab.** Every live post's clicks per day (last 7 days), trend ↑/↓, a 2-week mini chart, days up and groups; average clicks/day per car; which groups go with the most clicks; first-photo test results; dealer price changes. Click history is saved every sync, so this gets more accurate each day.
+- **Slow posts get flagged with one-tap fixes.** After 5+ days, a post well below your other cars shows "Slow". Fixes: **New first photo** (a different front shot goes first, on Facebook too; the app compares clicks/day after 3 days), **Things to mention** (rewrite and update the post), **List in groups**, and **Re-list fresh** (after 3 weeks up, once a month per car: takes the post down and posts it again as new). Also on the phone.
+- **Busy hours.** New posts and renewals wait for when the most people browse (weekday evenings 5 to 9pm, weekends 10am to 8pm). Clicking Post at a slow time asks: post at the busy time, or right now.
+- **Prices follow the dealer website.** Every 3 hours (8am to 8pm) each live car's dealer page is checked; when the website price changes, the app and the Facebook post change with it (a lower price also re-shows the post to people who saved it). A car that's gone from the website gets flagged "Not on the dealer website anymore. Sold?" with Mark sold. **Check dealer prices now** on the Performance tab.
+- The AI learns from your best posts using real clicks per day.
+
 ## What's new in 1.27.2
 
 - **No more leftover Facebook tabs.** Finished jobs close their tab reliably (the old timer could be cut off when the extension went idle), a car's posting tab closes a few seconds after "Posted complete", and every few minutes a clean-up closes any app tab whose work is over or was forgotten. Tabs that are still working, waiting for you to log in, or waiting for you to fix a post are left alone.

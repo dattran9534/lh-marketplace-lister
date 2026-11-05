@@ -24,6 +24,8 @@
     autopilot: true,
     workWhere: 'window',
     liveSyncMin: 15,
+    busyTimes: true,
+    matchDealerPrice: true,
     cloudUrl: 'https://auiprvcueqekuhuxepjp.supabase.co',
     cloudKey: 'sb_publishable_bgpi0s-mZeWhG6Mo3seTiA_Ug7eyR6o',
     geminiKey: '',
@@ -587,6 +589,80 @@
 
   // Your best Facebook posts by clicks per day, whose text we know (read from
   // Facebook, or the app's own copy), plus descriptions you rewrote yourself.
+  // ---------- performance: clicks per day, trend, slow cars, busy hours ----------
+  const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const dayMs = 86400000;
+  const daysBetween = (a, b) => Math.round((new Date(b + 'T12:00') - new Date(a + 'T12:00')) / dayMs);
+  // f.hist = [["2026-11-01", 12], ["2026-11-02", 15], ...] (total clicks seen each day)
+  function addClicks(f, now = new Date()) {
+    const k = dayKey(now);
+    const h = (f.hist || []).filter((x) => Array.isArray(x) && x[0] !== k);
+    h.push([k, Number(f.clicks) || 0]);
+    f.hist = h.slice(-45);
+    if (!f.firstSeen) f.firstSeen = (f.hist[0] && f.hist[0][0]) || k;
+    return f;
+  }
+  // Days the post has been up: Facebook's "listed" date when known, else the first day we saw it.
+  function daysUp(f, now = new Date()) {
+    const d = daysSince(f.listedOn, now);
+    if (d) return d;
+    return f.firstSeen ? Math.max(1, daysBetween(f.firstSeen, dayKey(now)) + 1) : 1;
+  }
+  // Clicks per day over the last `span` days (from the click history), or overall.
+  function clicksPerDay(f, span = 7, now = new Date()) {
+    const h = f.hist || [];
+    const today = dayKey(now);
+    const old = [...h].reverse().find((x) => daysBetween(x[0], today) >= Math.min(span, daysUp(f, now) - 1) && daysBetween(x[0], today) > 0);
+    if (old) { const d = daysBetween(old[0], today); return Math.max(0, ((Number(f.clicks) || 0) - old[1]) / d); }
+    return (Number(f.clicks) || 0) / daysUp(f, now);
+  }
+  // Clicks per day since a date (for "did the new first photo help?").
+  function clicksPerDaySince(f, since, now = new Date()) {
+    const h = f.hist || [];
+    const start = h.find((x) => x[0] >= since);
+    if (!start) return null;
+    const d = daysBetween(start[0], dayKey(now));
+    return d >= 1 ? Math.max(0, ((Number(f.clicks) || 0) - start[1]) / d) : null;
+  }
+  // Clicks per day in the days before a date.
+  function clicksPerDayBefore(f, before, span = 7) {
+    const h = (f.hist || []).filter((x) => x[0] <= before);
+    if (h.length < 2) return null;
+    const end = h[h.length - 1], start = [...h].reverse().find((x) => daysBetween(x[0], end[0]) >= span) || h[0];
+    const d = daysBetween(start[0], end[0]);
+    return d >= 1 ? Math.max(0, (end[1] - start[1]) / d) : null;
+  }
+  // Annotate live posts: cpd (clicks/day, last 7 days), trend (up/down/flat), slow (well below your average after 5+ days).
+  function annotatePerformance(list, now = new Date()) {
+    const live = list.filter((f) => (f.status || 'Active') === 'Active' && /^\d{4}\s/.test(f.title || ''));
+    for (const f of live) {
+      f.days = daysUp(f, now);
+      f.cpd = +clicksPerDay(f, 7, now).toFixed(1);
+      const recent = clicksPerDay(f, 3, now);
+      const before = clicksPerDayBefore(f, dayKey(new Date(now - 3 * dayMs)), 4);
+      f.trend = before == null || f.days < 5 ? '' : recent > before * 1.3 + 0.3 ? 'up' : recent < before * 0.7 - 0.3 ? 'down' : 'flat';
+    }
+    const settled = live.filter((f) => f.days >= 3).map((f) => f.cpd).sort((a, b) => a - b);
+    const median = settled.length ? settled[Math.floor(settled.length / 2)] : 0;
+    for (const f of list) f.slow = !!(live.includes(f) && f.days >= 5 && median > 0 && f.cpd < Math.max(0.5, median * 0.5));
+    return { median };
+  }
+  // Busy Marketplace hours: weekday evenings 5 to 9pm, weekends 10am to 8pm (your computer's time).
+  function isBusyTime(d = new Date()) {
+    const day = d.getDay(), h = d.getHours();
+    return day === 0 || day === 6 ? h >= 10 && h < 20 : h >= 17 && h < 21;
+  }
+  function nextBusyStart(d = new Date()) {
+    if (isBusyTime(d)) return d.getTime();
+    const t = new Date(d);
+    for (let i = 0; i < 8 * 24; i++) {
+      t.setMinutes(0, 0, 0);
+      t.setHours(t.getHours() + 1);
+      if (isBusyTime(t)) return t.getTime() + Math.floor(Math.random() * 20) * 60000;
+    }
+    return d.getTime();
+  }
+
   function learningSet(listings, fbListings, excludeId, fbDesc = {}) {
     listings = listings || [];
     const me = listings.find((l) => l.id === excludeId);
@@ -597,9 +673,10 @@
       const appCar = listings.find((l) => l.id !== excludeId && l.fb && l.fb.description && sameCar(l, f));
       const text = (fbDesc[fbKey(f)] && fbDesc[fbKey(f)].text) || (appCar && appCar.fb.description) || '';
       if (text.length < 40) continue;
-      const days = daysSince(f.listedOn) || 7;
-      // Rank by clicks per day, with 3 extra days added so a day-old post can't win on a lucky start.
-      winners.push({ title: f.title, clicks: f.clicks, perDay: +(f.clicks / days).toFixed(1), score: f.clicks / (days + 3), text });
+      const days = daysSince(f.listedOn) || (f.firstSeen ? daysUp(f) : 7);
+      // Rank by clicks per day (the click history when there is one), with 3 extra days so a day-old post can't win on a lucky start.
+      const perDay = f.cpd != null ? f.cpd : f.clicks / days;
+      winners.push({ title: f.title, clicks: f.clicks, perDay: +perDay.toFixed(1), score: f.cpd != null ? f.cpd * days / (days + 3) : f.clicks / (days + 3), text });
     }
     winners.sort((a, b) => b.score - a.score);
     const edits = listings
@@ -622,6 +699,6 @@
       .filter((f) => !fresh(f));
   }
 
-  global.LHShared = { sameCar, highlightList, sortItems, SORTS, willCertifyInfo, keyFeatures, mustKeep, standouts, milesInfo, learningSet, postsToLearnFrom, fbKey, daysSince, FB, DEFAULT_SETTINGS, toFacebook, describe, topFeatures, parseCarfax, factsFor, milesNote, firstSaleDate, certifiedInfo, certifiedSentence, mapColor, mapBody, mapFuel, mapMake, modelLine, EXT_RULES, INT_RULES };
+  global.LHShared = { dayKey, addClicks, daysUp, clicksPerDay, clicksPerDaySince, clicksPerDayBefore, annotatePerformance, isBusyTime, nextBusyStart, sameCar, highlightList, sortItems, SORTS, willCertifyInfo, keyFeatures, mustKeep, standouts, milesInfo, learningSet, postsToLearnFrom, fbKey, daysSince, FB, DEFAULT_SETTINGS, toFacebook, describe, topFeatures, parseCarfax, factsFor, milesNote, firstSaleDate, certifiedInfo, certifiedSentence, mapColor, mapBody, mapFuel, mapMake, modelLine, EXT_RULES, INT_RULES };
   if (typeof module !== 'undefined') module.exports = global.LHShared;
 })(typeof window !== 'undefined' ? window : globalThis);

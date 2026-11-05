@@ -196,3 +196,7 @@ label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-w
 .d-groups { margin: 10px 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; font-size: 15px; }
 .d-groups ul { margin: 6px 0; padding-left: 18px; color: var(--muted); }
 .d-groups .link { padding: 4px 0; }
+
+.d-fixes { border-color: color-mix(in srgb, #f5a623 50%, transparent); background: color-mix(in srgb, #f5a623 10%, transparent); }
+.fix-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.fix-row button { font-size: 14px; padding: 8px 12px; }
