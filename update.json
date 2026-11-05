@@ -1,6 +1,6 @@
 {
-  "version": "1.27.2",
+  "version": "1.28.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/e4209470c9ff53eb0b7c327540b3776a906721f7/",
-  "notes": "no more leftover Facebook tabs"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/4e0c080249b867f69ab4ea26be9bab23d6601824/",
+  "notes": "Performance tab, slow-post fixes, busy-hour posting, prices follow the dealer website"
 }
