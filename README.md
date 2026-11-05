@@ -2,6 +2,11 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.27.2
+
+- **No more leftover Facebook tabs.** Finished jobs close their tab reliably (the old timer could be cut off when the extension went idle), a car's posting tab closes a few seconds after "Posted complete", and every few minutes a clean-up closes any app tab whose work is over or was forgotten. Tabs that are still working, waiting for you to log in, or waiting for you to fix a post are left alone.
+- **A post that needs you now says so.** If a field didn't fill and the post can't publish by itself, its Facebook window comes to the front and the app shows what's wrong, instead of leaving the tab sitting in the background.
+
 ## What's new in 1.27.1
 
 - **Fixed: "Sort with AI" blanked phone photos.** Sorting dropped the link to photos that came from the phone (they live in your cloud storage), so they showed as empty boxes. Sorting now keeps them, and a car with blank photos shows **Recover photos**, which finds them again (from the import request that brought them in and the car's photo folder) and sorts them.
