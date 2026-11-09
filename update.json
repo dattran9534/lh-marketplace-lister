@@ -1,6 +1,6 @@
 {
-  "version": "1.28.1",
+  "version": "1.28.2",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/73e4d1dae48fa5ae51b01f3344d202bbdb715178/",
-  "notes": "Fixes Mark sold/pending/delete getting stuck: Facebook moved the listings page back"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/e0b1cf8433ef0df3f73936e54134a362923817f0/",
+  "notes": "Sync no longer wipes statuses when Facebook's page hangs on loading"
 }
