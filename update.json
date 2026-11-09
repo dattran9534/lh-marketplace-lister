@@ -1,6 +1,6 @@
 {
-  "version": "1.28.4",
+  "version": "1.28.5",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/ad96a5cf72b041e68ad5cb8422ffbdb2c8af9ce7/",
-  "notes": "Sync loads all your listings, not just the newest few"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/659c40badb444c28c4489f7c3c1752861ab71493/",
+  "notes": "Sync reads all your active listings using Facebook's status filter"
 }
