@@ -2,6 +2,10 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.28.5
+
+- **Sync reads every active listing, fast.** Your selling page holds 200+ listings (mostly sold), loaded 10 at a time. Sync now uses Facebook's own filter (Available & in stock, Pending, Sold) to read all active and pending listings plus the newest sold ones, in about 20 seconds. Mark sold / pending / delete find listings the same way.
+
 ## What's new in 1.28.4
 
 - **All your listings come in on Sync.** Facebook loads listings 10 at a time and only while the page is on screen, so a sync in the minimized window saw just the newest few. A Sync you start now brings the Facebook tab up for a moment until every listing has loaded; the first Sync each day is a full one. Background syncs still run hidden and only update what they see.
