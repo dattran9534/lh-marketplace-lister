@@ -2,6 +2,10 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.28.2
+
+- **Sync can't wipe your statuses anymore.** When Facebook's listings page hangs on its loading screen, the app reloads it once; if it still doesn't draw, you get a Try again message instead of "Synced 0 listings". An empty read never replaces what the app already knows.
+
 ## What's new in 1.28.1
 
 - **Mark sold / pending / delete works again.** Facebook moved your listings back to `/marketplace/you/selling` and now redirects the newer address to Marketplace home, which left jobs waiting. The app opens whichever page Facebook is using, switches to the other one by itself if it gets redirected, and remembers which one worked.
