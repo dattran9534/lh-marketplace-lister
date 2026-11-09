@@ -1,6 +1,6 @@
 {
-  "version": "1.28.5",
+  "version": "1.28.6",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/659c40badb444c28c4489f7c3c1752861ab71493/",
-  "notes": "Sync reads all your active listings using Facebook's status filter"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/bbc28eba58c9c91a2b8af3f5fb325ba2498bdd41/",
+  "notes": "Sync gets every active listing even in the hidden window"
 }
