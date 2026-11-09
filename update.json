@@ -1,6 +1,6 @@
 {
-  "version": "1.28.2",
+  "version": "1.28.3",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/e0b1cf8433ef0df3f73936e54134a362923817f0/",
-  "notes": "Sync no longer wipes statuses when Facebook's page hangs on loading"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/de9590ef52283bdc295ab1c99d43198413f5de84/",
+  "notes": "Sync and Mark sold work again on Facebook's current listings page"
 }
