@@ -1,6 +1,6 @@
 {
-  "version": "1.28.3",
+  "version": "1.28.4",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/de9590ef52283bdc295ab1c99d43198413f5de84/",
-  "notes": "Sync and Mark sold work again on Facebook's current listings page"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/ad96a5cf72b041e68ad5cb8422ffbdb2c8af9ce7/",
+  "notes": "Sync loads all your listings, not just the newest few"
 }
