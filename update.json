@@ -1,6 +1,6 @@
 {
-  "version": "1.28.0",
+  "version": "1.28.1",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/4e0c080249b867f69ab4ea26be9bab23d6601824/",
-  "notes": "Performance tab, slow-post fixes, busy-hour posting, prices follow the dealer website"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/73e4d1dae48fa5ae51b01f3344d202bbdb715178/",
+  "notes": "Fixes Mark sold/pending/delete getting stuck: Facebook moved the listings page back"
 }
