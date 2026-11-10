@@ -1,6 +1,6 @@
 {
-  "version": "1.28.6",
+  "version": "1.28.7",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/bbc28eba58c9c91a2b8af3f5fb325ba2498bdd41/",
-  "notes": "Sync gets every active listing even in the hidden window"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/014c42a16ab60de5d0744537f663a7e9d3b58c0e/",
+  "notes": "Delete/mark sold find every listing; posts show when they're in groups"
 }
