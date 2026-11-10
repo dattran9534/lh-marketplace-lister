@@ -1,6 +1,6 @@
 {
-  "version": "1.28.7",
+  "version": "1.28.8",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/014c42a16ab60de5d0744537f663a7e9d3b58c0e/",
-  "notes": "Delete/mark sold find every listing; posts show when they're in groups"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/95a4917d62468deb67488b37047c026136f7a5bc/",
+  "notes": "Copy log button for troubleshooting"
 }
