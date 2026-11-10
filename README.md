@@ -2,6 +2,11 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.28.9
+
+- **Delete, Mark sold/pending/available, List in groups and Check groups work again.** Facebook's "⋯" menu doesn't open in a minimized window, so these jobs now run in a normal Facebook tab for the few seconds they take; it closes and you're back in the app. Syncing and edits by listing number stay hidden.
+- Fixed "full is not defined" after Check groups, Mark sold and Delete.
+
 ## What's new in 1.28.8
 
 - **Copy log.** Next to Sync (and on every error message) a "Copy log" button copies what the app did with Facebook: each job, sync counts, errors, plus version and settings. Paste it into a message when something goes wrong.
