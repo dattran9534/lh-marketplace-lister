@@ -1,6 +1,6 @@
 {
-  "version": "1.28.8",
+  "version": "1.28.9",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/95a4917d62468deb67488b37047c026136f7a5bc/",
-  "notes": "Copy log button for troubleshooting"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/520b42c939a169667e801b18779c3ec428d4e447/",
+  "notes": "Delete, mark sold and groups work again"
 }
