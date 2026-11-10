@@ -1,6 +1,6 @@
 {
-  "version": "1.29.0",
+  "version": "1.29.1",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/29c17d765531165cf4cd6b7c3de286266a6cf1c7/",
-  "notes": "No repeat group posts; automatic group posts wait until you step away"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/cfb652531bd5453409d198a2007a2fdd83017f6b/",
+  "notes": "Start several jobs at once; on-screen ones take turns"
 }
