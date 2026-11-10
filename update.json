@@ -1,6 +1,6 @@
 {
-  "version": "1.28.9",
+  "version": "1.29.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/520b42c939a169667e801b18779c3ec428d4e447/",
-  "notes": "Delete, mark sold and groups work again"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/29c17d765531165cf4cd6b7c3de286266a6cf1c7/",
+  "notes": "No repeat group posts; automatic group posts wait until you step away"
 }
