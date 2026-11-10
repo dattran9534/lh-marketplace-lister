@@ -2,6 +2,11 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.28.7
+
+- **Mark sold / pending / delete / groups find any listing.** The app types the car into Facebook's "Search your listings" box, so the listing shows up right away, even in the minimized window where only the first few draw.
+- **Groups line comes from Facebook.** Each post shows "In groups" when Facebook says it's in at least one group; "Check groups on Facebook" fills in the names. Group-only posts (not on Marketplace) are labeled.
+
 ## What's new in 1.28.6
 
 - **Sync no longer depends on the page being on screen.** It asks Facebook for your listings the same way the selling page does when you scroll (using your own sign-in in that tab), so the minimized window gets every active and pending listing plus the newest sold ones in a few seconds. If Facebook changes that, it falls back to reading the page.

@@ -511,7 +511,7 @@
     if (!dg.hidden) {
       dg.innerHTML = '';
       const h = document.createElement('b');
-      h.textContent = gs.length ? `In ${gs.length} group${gs.length === 1 ? '' : 's'}` : 'Not in any groups yet';
+      h.textContent = gs.length ? `In ${gs.length} group${gs.length === 1 ? '' : 's'}` : f.inGroups ? 'In groups (tap Check groups to see which)' : 'Not in any groups yet';
       dg.appendChild(h);
       if (gs.length) { const ul = document.createElement('ul'); gs.forEach((g) => { const li = document.createElement('li'); li.textContent = g; ul.appendChild(li); }); dg.appendChild(ul); }
       const chk = document.createElement('button');
