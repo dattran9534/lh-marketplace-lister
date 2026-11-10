@@ -2,6 +2,11 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.29.0
+
+- **No more repeat group posts.** Auto publish reported each new post twice, which queued the car for groups twice. Each post now counts once, and the group queue never holds the same car twice.
+- **Automatic group posts don't take over your browser.** They wait until you've been away from the PC for 2 minutes, then run, then put you back on the tab you were on. Group posts you start yourself still run right away.
+
 ## What's new in 1.28.9
 
 - **Delete, Mark sold/pending/available, List in groups and Check groups work again.** Facebook's "⋯" menu doesn't open in a minimized window, so these jobs now run in a normal Facebook tab for the few seconds they take; it closes and you're back in the app. Syncing and edits by listing number stay hidden.
