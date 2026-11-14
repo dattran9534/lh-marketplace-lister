@@ -1,6 +1,6 @@
 {
-  "version": "1.30.2",
+  "version": "1.30.3",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/3a33ed92292ba4e8f7db469988a709d1d5204598/",
-  "notes": "No repeat group posts; syncs stay hidden and don't pile up"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/cd5f82922c6772d5b151d2bb33ebf14ce96d42fd/",
+  "notes": "Group posting shows which groups a car is already in"
 }
