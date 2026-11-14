@@ -473,7 +473,9 @@
     // Notes the CARFAX line already says ("one owner", "no accidents") aren't repeated.
     const said = lc(history);
     const hl = highlightList(raw).filter((h) => !(/^(1|one)[\s-]owner$/i.test(h) && /one owner/.test(said)) && !(/^no accidents?$/i.test(h) && /no accidents/.test(said)) && !(/^clean title$/i.test(h) && /clean title/.test(said)));
-    const hlLine = hl.length ? cap(joinList(hl.map((h, i) => (i ? h.charAt(0).toLowerCase() + h.slice(1) : h)))) + '.' : '';
+    // One sentence, not a list of fragments: "Plus new tires, timing belt done, no smoke and no pets."
+    const low = hl.map((h) => h.charAt(0).toLowerCase() + h.slice(1));
+    const hlLine = !hl.length ? '' : hl.length === 1 && hl[0].split(/\s+/).length >= 4 ? cap(hl[0]) + '.' : `Plus ${joinList(low)}.`;
     return [s.opening, [lead, history, hlLine, care, featLine, cert, cert ? '' : close].filter(Boolean).join(' ')].filter(Boolean).join('\n');
   }
 
@@ -493,7 +495,12 @@
     const will = willCertifyInfo(raw, carfax);
     if (will) keep.push(will.until);
     // Each of your notes must survive: its most telling word ("timing", "smoke", "pets").
-    highlightList(raw).forEach((h) => { const w = h.split(/\s+/).filter((x) => x.length > 3 && !/^(done|with|just|have|been|very|new|good|great|clean)$/i.test(x)).sort((a, b) => b.length - a.length)[0]; if (w) keep.push(w.toLowerCase()); });
+    // Only the root of its most telling word, so it can be reworded: "no smoke" -> "smok" (matches
+    // "non-smoking"), "new tires" -> "tire", "timing belt done" -> "timi".
+    highlightList(raw).forEach((h) => {
+      const w = h.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').split(/\s+/).filter((x) => x.length > 3 && !/^(done|with|just|have|been|very|good|great|clean|recently|brand|replaced|installed|fresh|owner|always|never)$/i.test(x)).sort((a, b) => b.length - a.length)[0];
+      if (w) keep.push(w.length >= 6 ? w.slice(0, 4) : w.replace(/(es|s|e)$/, ''));
+    });
     const hist = carfax ? carfax.positives || [] : [];
     if (hist.some((h) => /^One owner/.test(h))) keep.push('one owner');
     if (hist.some((h) => /^Clean title/.test(h))) keep.push('clean title');

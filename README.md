@@ -2,6 +2,10 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.30.1
+
+- **Smoother AI descriptions.** The AI now rewrites the post as one flowing paragraph instead of lightly rewording the draft: your "Things to mention" notes are worked into real sentences ("it comes from a non-smoking, pet-free home") rather than listed. Rewording a note no longer throws the AI version away, choppy replies get sent back to the AI once to fix, and the example it learns from is your Civic post.
+
 ## What's new in 1.30.0
 
 - **Paste a CARFAX link.** When the report isn't on the dealer page yet, paste the link (from CARFAX or your work app) in the CARFAX box when importing, or in the car's Vehicle history section ("Use this CARFAX"). The app reads it, ticks clean title when it says so, and rewrites the description with its good points. On the phone it's in Add a car and in the car's details.
