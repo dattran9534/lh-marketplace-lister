@@ -1,6 +1,6 @@
 {
-  "version": "1.29.1",
+  "version": "1.30.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/cfb652531bd5453409d198a2007a2fdd83017f6b/",
-  "notes": "Start several jobs at once; on-screen ones take turns"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/65954e1e69119544f41991db3af871f2921fa2ac/",
+  "notes": "Paste a CARFAX link; add cars by VIN before they're on the website"
 }
