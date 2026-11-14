@@ -2,6 +2,12 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.30.2
+
+- **No repeat group posts.** Listing a car in groups yourself takes it off the automatic queue, the queue skips cars already in groups, and groups that already have the post are never posted to again ("Listed in 3 new groups, already in 15").
+- **Sync never takes over the screen** (it reads your listings directly), and a second sync request joins the one already running instead of starting another.
+- **Stuck jobs are cleared** (PC asleep, tab closed), so they don't pile up or show as running.
+
 ## What's new in 1.30.1
 
 - **Smoother AI descriptions.** The AI now rewrites the post as one flowing paragraph instead of lightly rewording the draft: your "Things to mention" notes are worked into real sentences ("it comes from a non-smoking, pet-free home") rather than listed. Rewording a note no longer throws the AI version away, choppy replies get sent back to the AI once to fix, and the example it learns from is your Civic post.
