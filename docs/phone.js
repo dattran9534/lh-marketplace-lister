@@ -782,15 +782,50 @@
   }
   $('#addCarBtn').onclick = () => {
     addFiles = []; renderAddThumbs();
-    $('#addUrl').value = ''; $('#addNotes').value = ''; $('#addMsg').textContent = ''; $('#addGo').disabled = false;
+    $('#addUrl').value = ''; $('#addNotes').value = ''; $('#addCarfax').value = ''; $('#addMsg').textContent = ''; $('#addGo').disabled = false;
+    $('#addManual').hidden = true; $('#addUrlField').hidden = false; $('#addPhotosLbl').textContent = 'Add your photos (optional)'; $('#addManualToggle').textContent = 'Not on the website yet? Add it with the VIN';
+    ['mVin', 'mYear', 'mMake', 'mModel', 'mTrim', 'mMiles', 'mPrice'].forEach((id) => { $('#' + id).value = ''; }); $('#mVinMsg').textContent = ''; manualDecoded = null;
     $('#addSheet').hidden = false;
   };
   $('#closeAdd').onclick = () => ($('#addSheet').hidden = true);
   $('#addSheet').onclick = (e) => { if (e.target.id === 'addSheet') $('#addSheet').hidden = true; };
   $('#addCarPhotos').onchange = (e) => { addFiles.push(...e.target.files); e.target.value = ''; renderAddThumbs(); };
+  // A car that isn't on the website yet: VIN lookup fills year, make, model, trim and drive.
+  let manualDecoded = null;
+  const manualOn = () => !$('#addManual').hidden;
+  $('#addManualToggle').onclick = () => {
+    const on = !manualOn();
+    $('#addManual').hidden = !on; $('#addUrlField').hidden = on;
+    $('#addManualToggle').textContent = on ? 'It is on the website: paste the link instead' : 'Not on the website yet? Add it with the VIN';
+    $('#addPhotosLbl').textContent = on ? 'Add your photos' : 'Add your photos (optional)';
+    if (on) $('#mVin').focus();
+  };
+  $('#mVin').oninput = async () => {
+    const vin = LHShared.cleanVin($('#mVin').value);
+    if (vin.length !== 17 || (manualDecoded && manualDecoded.vin === vin)) return;
+    $('#mVinMsg').textContent = 'Looking up the VIN…';
+    try {
+      const d = await LHShared.decodeVin(vin);
+      manualDecoded = d;
+      $('#mYear').value = d.year; $('#mMake').value = d.make; $('#mModel').value = d.model; $('#mTrim').value = d.trim;
+      $('#mVinMsg').textContent = `${d.year} ${d.make} ${d.model} ${d.trim}${d.drive === 'AWD' || d.drive === '4WD' ? ' ' + d.drive : ''}`;
+    } catch (e) { manualDecoded = null; $('#mVinMsg').textContent = `${e.message} You can type the details.`; }
+  };
   $('#addGo').onclick = async () => {
     const url = $('#addUrl').value.trim();
-    if (!/^https?:\/\//i.test(url)) { $('#addMsg').textContent = 'Paste the link to the car first.'; return; }
+    const carfaxUrl = $('#addCarfax').value.trim();
+    if (carfaxUrl && !/^https?:\/\//i.test(carfaxUrl)) { $('#addMsg').textContent = 'The CARFAX box needs a link (starting with https://).'; return; }
+    let manual = null;
+    if (manualOn()) {
+      const v = (id) => $('#' + id).value.trim();
+      const vin = LHShared.cleanVin(v('mVin'));
+      const missing = [!/^\d{4}$/.test(v('mYear')) && 'year', !v('mMake') && 'make', !v('mModel') && 'model', !v('mMiles') && 'miles', !v('mPrice') && 'price'].filter(Boolean);
+      if (missing.length) { $('#addMsg').textContent = `Fill in: ${missing.join(', ')}.`; return; }
+      if (vin && vin.length !== 17) { $('#addMsg').textContent = 'The VIN should have 17 characters.'; return; }
+      if (!addFiles.length) { $('#addMsg').textContent = 'Add your photos: there are no website photos for this car yet.'; return; }
+      const d = manualDecoded && manualDecoded.vin === vin ? manualDecoded : {};
+      manual = { ...d, vin, year: v('mYear'), make: v('mMake'), model: v('mModel'), trim: v('mTrim'), mileage: v('mMiles'), price: v('mPrice') };
+    } else if (!/^https?:\/\//i.test(url)) { $('#addMsg').textContent = 'Paste the link to the car first (or tap "Not on the website yet?").'; return; }
     $('#addGo').disabled = true;
     try {
       const batch = crypto.randomUUID();
@@ -802,7 +837,7 @@
         photos.push(path);
       }
       $('#addSheet').hidden = true;
-      await request('import', { url, photos, onlyMine: photos.length > 0 && $('#onlyMine').checked, highlights: $('#addNotes').value.trim() }, photos.length ? `Import requested with ${photos.length} photo${photos.length === 1 ? '' : 's'}` : 'Import requested');
+      await request('import', { url: manual ? '' : url, manual, carfaxUrl, photos, onlyMine: !!manual || (photos.length > 0 && $('#onlyMine').checked), highlights: $('#addNotes').value.trim() }, manual ? `${manual.year} ${manual.make} ${manual.model} requested with ${photos.length} photo${photos.length === 1 ? '' : 's'}` : photos.length ? `Import requested with ${photos.length} photo${photos.length === 1 ? '' : 's'}` : 'Import requested');
     } catch (e) {
       $('#addMsg').textContent = `Upload stopped: ${e.message}`;
       $('#addGo').disabled = false;
@@ -836,7 +871,10 @@
     await saveVehicle(v);
     const f = S.open && S.open.f;
     const live = !!(f && f.status !== 'Sold');
-    await request('rewrite', { vehicleId: v.id, title: `${v.fb.year} ${v.fb.make} ${v.fb.model}`, pushFb: live }, live ? 'New description requested (Facebook too)' : 'New description requested');
+    const carfaxUrl = $('#dCarfax').value.trim();
+    if (carfaxUrl && !/^https?:\/\//i.test(carfaxUrl)) { alert("The CARFAX box needs a link (starting with https://)."); return; }
+    $('#dCarfax').value = '';
+    await request('rewrite', { vehicleId: v.id, title: `${v.fb.year} ${v.fb.make} ${v.fb.model}`, pushFb: live, carfaxUrl }, `${carfaxUrl ? 'CARFAX and new description' : 'New description'} requested${live ? ' (Facebook too)' : ''}`);
   };
   $('#swAutoPost').onchange = (e) => setSwitch('autoPost', e.target.checked, e.target);
   $('#swAutoRenew').onchange = (e) => setSwitch('autoRenew', e.target.checked, e.target);

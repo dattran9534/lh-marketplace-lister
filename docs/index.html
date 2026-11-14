@@ -115,6 +115,9 @@
         <label class="field">Things to mention in the description
           <textarea id="dNotes" rows="2" placeholder="e.g. new timing belt done, no smoke, no pets"></textarea>
         </label>
+        <label class="field">CARFAX link (optional, if it's not on the dealer page)
+          <input id="dCarfax" type="url" inputmode="url" autocomplete="off" placeholder="Paste from CARFAX or your work app">
+        </label>
         <button id="dNotesGo" class="secondary">Save and rewrite description</button>
       </div>
       <div id="dDescBox">
@@ -132,13 +135,31 @@
       <div class="grab"></div>
       <button id="closeAdd" class="icon close" aria-label="Close">✕</button>
       <h2 id="addTitle">Add a car</h2>
-      <label class="field">Link from lynnwoodhonda.com
+      <label class="field" id="addUrlField">Link from lynnwoodhonda.com
         <input id="addUrl" type="url" inputmode="url" autocomplete="off" placeholder="https://www.lynnwoodhonda.com/viewdetails/...">
+      </label>
+      <button id="addManualToggle" type="button" class="link small">Not on the website yet? Add it with the VIN</button>
+      <div id="addManual" hidden>
+        <label class="field">VIN
+          <input id="mVin" autocomplete="off" autocapitalize="characters" maxlength="20" placeholder="17 characters" style="text-transform:uppercase">
+        </label>
+        <p id="mVinMsg" class="muted small"></p>
+        <div class="mgrid">
+          <label class="field">Year<input id="mYear" inputmode="numeric"></label>
+          <label class="field">Make<input id="mMake"></label>
+          <label class="field">Model<input id="mModel"></label>
+          <label class="field">Trim<input id="mTrim"></label>
+          <label class="field">Miles<input id="mMiles" inputmode="numeric"></label>
+          <label class="field">Price<input id="mPrice" inputmode="numeric"></label>
+        </div>
+      </div>
+      <label class="field">CARFAX link (optional)
+        <input id="addCarfax" type="url" inputmode="url" autocomplete="off" placeholder="Paste from CARFAX or your work app">
       </label>
       <label class="field">Things to mention (optional)
         <textarea id="addNotes" rows="2" placeholder="e.g. new timing belt done, no smoke, no pets"></textarea>
       </label>
-      <label class="btn secondary big"><input id="addCarPhotos" type="file" accept="image/*" multiple hidden>Add your photos (optional)</label>
+      <label class="btn secondary big"><input id="addCarPhotos" type="file" accept="image/*" multiple hidden><span id="addPhotosLbl">Add your photos (optional)</span></label>
       <div id="addThumbs" class="add-thumbs"></div>
       <label class="check-row" id="onlyMineRow" hidden><input id="onlyMine" type="checkbox" checked> Use only my photos (skip the dealer's)</label>
       <p class="muted small">If the dealer site only has the generic catalog picture, it's replaced by your photos automatically.</p>

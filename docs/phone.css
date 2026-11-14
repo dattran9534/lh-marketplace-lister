@@ -200,3 +200,8 @@ label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-w
 .d-fixes { border-color: color-mix(in srgb, #f5a623 50%, transparent); background: color-mix(in srgb, #f5a623 10%, transparent); }
 .fix-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .fix-row button { font-size: 14px; padding: 8px 12px; }
+
+/* Add a car without a website link */
+.mgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+.mgrid .field { margin: 4px 0 8px; }
+#addManualToggle { margin: -4px 0 8px; padding: 0; text-align: left; }

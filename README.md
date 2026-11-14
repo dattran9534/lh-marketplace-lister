@@ -2,6 +2,11 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.30.0
+
+- **Paste a CARFAX link.** When the report isn't on the dealer page yet, paste the link (from CARFAX or your work app) in the CARFAX box when importing, or in the car's Vehicle history section ("Use this CARFAX"). The app reads it, ticks clean title when it says so, and rewrites the description with its good points. On the phone it's in Add a car and in the car's details.
+- **Add a car that isn't on the website yet.** "No website link yet?" (PC) or "Not on the website yet?" (phone): type the VIN and the app looks up year, make, model, trim and drive (free NHTSA lookup), then add miles, price, your photos, CARFAX link and notes. When the car shows up on lynnwoodhonda.com, click "Add website link" in the editor; your photos, notes and CARFAX link stay.
+
 ## What's new in 1.29.1
 
 - **Run many jobs at once without them colliding.** Jobs that need Facebook on screen (Delete, Mark sold/pending/available, List in groups, Check groups) now line up and run one after another. Hidden jobs (sync, price / photo / description edits) still run side by side.

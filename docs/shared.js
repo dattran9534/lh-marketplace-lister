@@ -470,7 +470,9 @@
 
     // The warranty line is the strongest finish; the "harder to find" line closes the rest.
     // Your own notes from the import box ("new timing belt done, no smoke, no pets").
-    const hl = highlightList(raw);
+    // Notes the CARFAX line already says ("one owner", "no accidents") aren't repeated.
+    const said = lc(history);
+    const hl = highlightList(raw).filter((h) => !(/^(1|one)[\s-]owner$/i.test(h) && /one owner/.test(said)) && !(/^no accidents?$/i.test(h) && /no accidents/.test(said)) && !(/^clean title$/i.test(h) && /clean title/.test(said)));
     const hlLine = hl.length ? cap(joinList(hl.map((h, i) => (i ? h.charAt(0).toLowerCase() + h.slice(1) : h)))) + '.' : '';
     return [s.opening, [lead, history, hlLine, care, featLine, cert, cert ? '' : close].filter(Boolean).join(' ')].filter(Boolean).join('\n');
   }
@@ -699,6 +701,56 @@
       .filter((f) => !fresh(f));
   }
 
-  global.LHShared = { dayKey, addClicks, daysUp, clicksPerDay, clicksPerDaySince, clicksPerDayBefore, annotatePerformance, isBusyTime, nextBusyStart, sameCar, highlightList, sortItems, SORTS, willCertifyInfo, keyFeatures, mustKeep, standouts, milesInfo, learningSet, postsToLearnFrom, fbKey, daysSince, FB, DEFAULT_SETTINGS, toFacebook, describe, topFeatures, parseCarfax, factsFor, milesNote, firstSaleDate, certifiedInfo, certifiedSentence, mapColor, mapBody, mapFuel, mapMake, modelLine, EXT_RULES, INT_RULES };
+  // ---- cars with no dealer page yet --------------------------------------
+  // Free VIN lookup from NHTSA (the US government's vehicle database): year, make, model, trim,
+  // drive, body, fuel, transmission, engine. Works from the PC app and the phone.
+  const KEEP_CAPS = /^(BMW|GMC|MINI|RAM|FIAT|KIA|AMC)$/;
+  const nameCase = (s) => String(s || '').trim().toLowerCase().replace(/(^|[\s-])([a-z])/g, (m, a, b) => a + b.toUpperCase())
+    .split(' ').map((w) => (KEEP_CAPS.test(w.toUpperCase()) && w.length <= 4 ? (w.toUpperCase() === 'KIA' || w.toUpperCase() === 'FIAT' ? w : w.toUpperCase()) : w)).join(' ');
+  const AWD_BRANDS = /^(honda|acura|toyota|lexus|subaru|hyundai|kia|genesis|mazda|nissan|infiniti|mitsubishi|volvo|volkswagen|audi|bmw|mercedes-benz|mini|porsche|tesla|lincoln|cadillac|buick|land rover|jaguar|alfa romeo)$/i;
+  function cleanVin(v) { return String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/[IOQ]/g, (c) => ({ I: '1', O: '0', Q: '0' })[c]); }
+  async function decodeVin(vinIn) {
+    const vin = cleanVin(vinIn);
+    if (vin.length !== 17) throw new Error('A VIN has 17 characters');
+    const r = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${vin}?format=json`);
+    if (!r.ok) throw new Error('The VIN lookup is not answering right now');
+    const x = ((await r.json()).Results || [])[0] || {};
+    if (!x.Make || !x.ModelYear) throw new Error("That VIN didn't match a vehicle. Check it and try again.");
+    const make = nameCase(x.Make).replace(/^Mercedes Benz$/i, 'Mercedes-Benz');
+    const body = String(x.BodyClass || '');
+    const truck = /pickup|truck/i.test(body);
+    const dt = String(x.DriveType || '');
+    const drive = /AWD|all[\s-]?wheel/i.test(dt) ? 'AWD'
+      : /4WD|4x4|4-wheel/i.test(dt) ? (AWD_BRANDS.test(make) && !truck ? 'AWD' : '4WD')
+      : dt ? '2WD' : '';
+    const el = String(x.ElectrificationLevel || '');
+    const fuel = /BEV|battery electric/i.test(el) ? 'Electric' : /PHEV|plug-in/i.test(el) ? 'Plug-in hybrid' : /HEV|hybrid/i.test(el) ? 'Hybrid'
+      : /diesel/i.test(x.FuelTypePrimary || '') ? 'Diesel' : /electric/i.test(x.FuelTypePrimary || '') ? 'Electric' : x.FuelTypePrimary ? 'Gasoline' : '';
+    const bodyStyle = /SUV|sport utility|multipurpose/i.test(body) ? 'SUV' : /minivan/i.test(body) ? 'Minivan' : truck ? 'Truck'
+      : /convertible/i.test(body) ? 'Convertible' : /coupe/i.test(body) ? 'Coupe' : /hatchback/i.test(body) ? 'Hatchback'
+      : /wagon/i.test(body) ? 'Wagon' : /sedan/i.test(body) ? 'Sedan' : /van/i.test(body) ? 'Van' : '';
+    const liters = parseFloat(x.DisplacementL);
+    return {
+      vin, year: +x.ModelYear || '', make, model: String(x.Model || '').trim(), trim: String(x.Trim || x.Series || '').trim(),
+      drive, bodyStyle, fuelType: fuel, doors: +x.Doors || '',
+      transmission: /manual/i.test(x.TransmissionStyle || '') ? 'Manual' : 'Automatic',
+      engine: liters ? `${liters.toFixed(1)}L${x.EngineCylinders ? ' ' + x.EngineCylinders + '-cylinder' : ''}` : '',
+    };
+  }
+  // A car record from what you typed (and the VIN lookup), shaped like a dealer-page import.
+  function manualRaw(m) {
+    const num = (v) => +String(v || '').replace(/[^\d]/g, '') || '';
+    return {
+      sourceUrl: '', site: '', manual: true,
+      vin: cleanVin(m.vin), stock: String(m.stock || '').trim(),
+      year: num(m.year), make: String(m.make || '').trim(), model: String(m.model || '').trim(), trim: String(m.trim || '').trim(),
+      drive: m.drive || '', bodyStyle: m.bodyStyle || '', fuelType: m.fuelType || '', transmission: m.transmission || '', engine: m.engine || '',
+      doors: m.doors || '', mileage: num(m.mileage), price: num(m.price),
+      exteriorColor: String(m.exteriorColor || '').trim(), interiorColor: String(m.interiorColor || '').trim(),
+      condition: 'Used', certified: '', features: [], images: [], name: '', headline: '',
+    };
+  }
+
+  global.LHShared = { decodeVin, manualRaw, cleanVin, dayKey, addClicks, daysUp, clicksPerDay, clicksPerDaySince, clicksPerDayBefore, annotatePerformance, isBusyTime, nextBusyStart, sameCar, highlightList, sortItems, SORTS, willCertifyInfo, keyFeatures, mustKeep, standouts, milesInfo, learningSet, postsToLearnFrom, fbKey, daysSince, FB, DEFAULT_SETTINGS, toFacebook, describe, topFeatures, parseCarfax, factsFor, milesNote, firstSaleDate, certifiedInfo, certifiedSentence, mapColor, mapBody, mapFuel, mapMake, modelLine, EXT_RULES, INT_RULES };
   if (typeof module !== 'undefined') module.exports = global.LHShared;
 })(typeof window !== 'undefined' ? window : globalThis);
