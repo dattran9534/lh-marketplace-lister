@@ -2,6 +2,12 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.30.3
+
+- **Group messages tell the truth.** Facebook hides the groups a post is already in from "List in more places", which the app used to report as "not offered". Now it says "Listed in 1 new group (already in the other 18)", and only groups you've really left show as no longer offered.
+- **Check groups on Facebook is right.** It now counts a group as "in" when Facebook hides it for that post, so each car's groups line fills in correctly.
+- **Your group list never shrinks.** Syncing groups adds new ones and keeps the ones already known (one listing's window leaves out groups that listing is in).
+
 ## What's new in 1.30.2
 
 - **No repeat group posts.** Listing a car in groups yourself takes it off the automatic queue, the queue skips cars already in groups, and groups that already have the post are never posted to again ("Listed in 3 new groups, already in 15").
