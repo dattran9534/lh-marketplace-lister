@@ -1,6 +1,6 @@
 {
-  "version": "1.30.5",
+  "version": "1.31.0",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/823400ca658c523dcfa2f3691e6f57fffeab57d8/",
-  "notes": "Group posts wait for Facebook to finish"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/a02eae522e622cd74ffedd9f8274167d38130354/",
+  "notes": "Groups are ticked before Publish, so they go out with the post"
 }
