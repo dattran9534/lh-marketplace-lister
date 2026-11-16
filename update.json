@@ -1,6 +1,6 @@
 {
-  "version": "1.30.3",
+  "version": "1.30.4",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/cd5f82922c6772d5b151d2bb33ebf14ce96d42fd/",
-  "notes": "Group posting shows which groups a car is already in"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/e7afc86c938e44b7b026aa1d878c038a992586d8/",
+  "notes": "Delete selected unposted cars"
 }
