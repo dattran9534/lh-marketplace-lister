@@ -2,6 +2,10 @@
 
 An Edge (or Chrome) extension that pulls vehicles from lynnwoodhonda.com and fills Facebook Marketplace's **Vehicle for sale** form: photos, details, and a description in Dat's style. It never clicks Publish. You look it over and publish it yourself.
 
+## What's new in 1.30.5
+
+- **Group posts finish.** Facebook posts to each group in turn and keeps its window open while it works; the app used to give up after 30 seconds and close the tab, cutting the rest off. It now waits up to 3 minutes for Facebook to finish.
+
 ## What's new in 1.30.4
 
 - **Delete selected.** Check cars that aren't posted (on the dashboard, or in the Vehicle editor's list) and click "Delete selected" to remove them from the app and your phone in one go. Cars on Facebook (live or sold) are never removed this way, so their history and stats stay.
