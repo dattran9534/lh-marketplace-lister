@@ -1,6 +1,6 @@
 {
-  "version": "1.31.0",
+  "version": "1.31.1",
   "zip": "lh-marketplace-lister.zip",
-  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/a02eae522e622cd74ffedd9f8274167d38130354/",
-  "notes": "Groups are ticked before Publish, so they go out with the post"
+  "base": "https://raw.githubusercontent.com/dattran9534/lh-marketplace-lister/13c5576bc13aedf9adc0ddb2d8de3e7ff1ed107a/",
+  "notes": "Shorter log; no extra group pass after groups go out with the post"
 }
